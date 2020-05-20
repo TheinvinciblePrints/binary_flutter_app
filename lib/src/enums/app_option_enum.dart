@@ -1,0 +1,1 @@
+enum AppOption { OFFLINE, ONLINE }
