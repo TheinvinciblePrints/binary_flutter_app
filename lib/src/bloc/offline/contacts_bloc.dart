@@ -41,6 +41,10 @@ class ContactsBloc {
     getContacts();
   }
 
+  refreshContacts() async {
+    await getContacts();
+  }
+
   dispose() {
     _contactsController.close();
   }

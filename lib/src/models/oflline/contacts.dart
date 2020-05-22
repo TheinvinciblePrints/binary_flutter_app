@@ -3,11 +3,11 @@ class Contacts {
   String first_name;
   String last_name;
   String dob;
-  String mobile_nmuber;
+  String mobile;
   String title;
   String company;
 
-  bool isFavourite = false;
+  bool is_favourite = false;
 
   //When using curly braces { } we note dart that
   //the parameters are optional
@@ -16,10 +16,10 @@ class Contacts {
       this.first_name,
       this.last_name,
       this.dob,
-      this.mobile_nmuber,
+      this.mobile,
       this.title,
       this.company,
-      this.isFavourite = false});
+      this.is_favourite = false});
 
   factory Contacts.fromDatabaseJson(Map<String, dynamic> data) => Contacts(
         //Factory method will be used to convert JSON objects that
@@ -30,14 +30,14 @@ class Contacts {
         first_name: data['first_name'],
         last_name: data['last_name'],
         dob: data['dob'],
-        mobile_nmuber: data['mobile_nmuber'],
+        mobile: data['mobile'],
         title: data['title'],
         company: data['company'],
 
         //Since sqlite doesn't have boolean type for true/false,
         //we will use 0 to denote that it is false
         //and 1 for true
-        isFavourite: data['is_favourite'] == 0 ? false : true,
+        is_favourite: data['is_favourite'] == 0 ? false : true,
       );
 
   Map<String, dynamic> toDatabaseJson() => {
@@ -48,9 +48,9 @@ class Contacts {
         "first_name": this.first_name,
         "last_name": this.last_name,
         "dob": this.dob,
-        "mobile_nmuber": this.mobile_nmuber,
+        "mobile": this.mobile,
         "title": this.title,
         "company": this.company,
-        "is_favourite": this.isFavourite == false ? 0 : 1,
+        "is_favourite": this.is_favourite == false ? 0 : 1,
       };
 }

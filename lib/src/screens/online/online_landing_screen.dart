@@ -1,21 +1,17 @@
 import 'package:binaryflutterapp/src/bloc/online/page_option_bloc.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/screens/offline/add_contact_screen.dart';
-import 'package:binaryflutterapp/src/screens/offline/contacts_screen.dart';
-import 'package:binaryflutterapp/src/screens/offline/favourites_screen.dart';
+import 'package:binaryflutterapp/src/screens/online/all_users_screen.dart';
+import 'package:binaryflutterapp/src/screens/online/favourites_screen.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 
-class OfflineLandingScreen extends StatefulWidget {
-  //We load our Contacts BLoC that is used to get
-  //the stream of Contacts for StreamBuilder
-//  final AppOptionBloc appOptionBloc;
+class OnlineLandingScreen extends StatefulWidget {
   @override
-  _OfflineLandingScreenState createState() => _OfflineLandingScreenState();
+  _OnlineLandingScreenState createState() => _OnlineLandingScreenState();
 }
 
-class _OfflineLandingScreenState extends State<OfflineLandingScreen> {
+class _OnlineLandingScreenState extends State<OnlineLandingScreen> {
   final List<String> _toggleTexts = ['All', 'Favourites'];
   PageOptionBloc pageOptionBloc;
 
@@ -37,8 +33,9 @@ class _OfflineLandingScreenState extends State<OfflineLandingScreen> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(StringUtils.offline_title),
+        title: Text(StringUtils.online_title),
       ),
+      resizeToAvoidBottomPadding: false,
       body: StreamBuilder(
           stream: pageOptionBloc.getPage,
           builder: (context, snapshot) {
@@ -53,12 +50,7 @@ class _OfflineLandingScreenState extends State<OfflineLandingScreen> {
       floatingActionButton: Container(
         margin: EdgeInsets.only(bottom: 60),
         child: FloatingActionButton(
-          onPressed: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AddContactScreen()),
-            );
-          },
+          onPressed: () {},
           backgroundColor: Hexcolor(AppColors.primaryColor),
           child: const Icon(
             Icons.add,
@@ -135,10 +127,10 @@ class _OfflineLandingScreenState extends State<OfflineLandingScreen> {
   pageChooser(int page) {
     switch (page) {
       case 0:
-        return ContactScreen();
+        return AllUserScreen();
         break;
       case 1:
-        return OfflineFavouriteScreen();
+        return OnlineFavouriteScreen();
         break;
     }
   }

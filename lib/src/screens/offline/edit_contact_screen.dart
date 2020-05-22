@@ -7,14 +7,18 @@ import 'package:flutter/services.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:masked_text/masked_text.dart';
 
-class AddContactScreen extends StatefulWidget {
-  static String tag = 'add-page';
+class EditContactScreen extends StatefulWidget {
+  static String tag = 'edit-page';
+
+  final Contacts contacts;
+
+  EditContactScreen({@required this.contacts});
 
   @override
-  _AddContactScreenState createState() => _AddContactScreenState();
+  _EditContactScreenState createState() => _EditContactScreenState();
 }
 
-class _AddContactScreenState extends State<AddContactScreen> {
+class _EditContactScreenState extends State<EditContactScreen> {
   final _formKey = GlobalKey<FormState>();
   final _cFirstName = TextEditingController();
   final _cLastName = TextEditingController();
@@ -27,6 +31,13 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   @override
   void initState() {
+    _cFirstName.text = widget.contacts.first_name;
+    _cLastName.text = widget.contacts.last_name;
+    _cTitle.text = widget.contacts.title;
+    _cDOB.text = widget.contacts.dob;
+    _cPhoneNumber.text = widget.contacts.mobile;
+    _cCompany.text = widget.contacts.company;
+
     super.initState();
   }
 
@@ -157,7 +168,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text(
-                'Add Contact',
+                'Edit Contact',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -196,7 +207,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
             Navigator.of(context).pop();
           },
         ),
-        title: Text("Create new contact"),
+        title: Text("Edit Contact"),
       ),
       body: Builder(builder: (_context) => bodyUI(_context)),
     );
@@ -213,20 +224,20 @@ class _AddContactScreenState extends State<AddContactScreen> {
               borderRadius: BorderRadius.circular(20.0),
               side: BorderSide(color: Hexcolor(AppColors.accentColor))),
           onPressed: () async {
-            final newContact = Contacts(
+            final updateContact = Contacts(
                 first_name: _cFirstName.value.text.trim(),
                 last_name: _cLastName.value.text.trim(),
                 dob: _cDOB.value.text.trim(),
                 mobile: _cPhoneNumber.value.text.trim(),
                 title: _cTitle.value.text.trim(),
                 company: _cCompany.value.text.trim());
-            if (newContact.first_name.isNotEmpty &&
-                newContact.last_name.isNotEmpty &&
-                newContact.dob.isNotEmpty &&
-                newContact.mobile.isNotEmpty &&
-                newContact.title.isNotEmpty &&
-                newContact.company.isNotEmpty) {
-              _contactsBloc.addContact(newContact);
+            if (updateContact.first_name.isNotEmpty &&
+                updateContact.last_name.isNotEmpty &&
+                updateContact.dob.isNotEmpty &&
+                updateContact.mobile.isNotEmpty &&
+                updateContact.title.isNotEmpty &&
+                updateContact.company.isNotEmpty) {
+              _contactsBloc.updateContact(updateContact);
 
               await _contactsBloc.refreshContacts();
 
@@ -239,7 +250,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
               Scaffold.of(context).showSnackBar(snackBar);
             }
           },
-          child: const Text('Save', style: TextStyle(fontSize: 18)),
+          child: const Text('Update', style: TextStyle(fontSize: 18)),
           color: Hexcolor(AppColors.accentColor),
           textColor: Colors.white,
           elevation: 5,

@@ -23,18 +23,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  connectivity: #lasted version
-  provider: #lasted version
-  get_it: #lasted version
-  http: #lasted version
-  sqflite: #lasted version
-  path_provider: #lasted version
-  shared_preferences: #lasted version
-  hexcolor: #lasted version
-  equatable: #lasted version
-  masked_text: ^0.0.6
-  flutter_appavailability: ^0.0.21
-  bloc: ^0.13.0
+
 
 
 
@@ -46,6 +35,19 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  connectivity: #lasted version
+  get_it: #lasted version
+  url_launcher: #lasted version
+  http: #lasted version
+  sqflite: #lasted version
+  path_provider: #lasted version
+  shared_preferences: #lasted version
+  hexcolor: #lasted version
+  equatable: #lasted version
+  font_awesome_flutter: #lasted version
+  masked_text: ^0.0.6
+  rxdart: ^0.22.6
+  bloc: ^0.13.0
 
 
 

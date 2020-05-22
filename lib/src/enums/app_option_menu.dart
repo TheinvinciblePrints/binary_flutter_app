@@ -1,0 +1,1 @@
+enum AppOptionMenu { OFFLINE, ONLINE }

@@ -1,5 +1,7 @@
 class StringUtils {
   static String app_title = 'Binary App';
+  static String offline_title = 'Offline Mode';
+  static String online_title = 'Online Mode';
   static String current_location_title = 'Current Location';
   static String subtitle = 'subtitle';
   static String title = 'title';
