@@ -1,5 +1,5 @@
-import 'package:binaryflutterapp/src/dao/contacts_dao.dart';
-import 'package:binaryflutterapp/src/models/oflline/contacts.dart';
+import 'package:binaryflutterapp/src/database/dao/contacts_dao.dart';
+import 'package:binaryflutterapp/src/models/contacts.dart';
 
 class ContactsRepository {
   final contactsDao = ContactsDao();
@@ -7,9 +7,11 @@ class ContactsRepository {
   Future getAllContacts({String query}) =>
       contactsDao.getContacts(query: query);
 
-  Future insertContact(Contacts todo) => contactsDao.createContacts(todo);
+  Future insertContact(Contacts contacts) =>
+      contactsDao.createContacts(contacts);
 
-  Future updateContact(Contacts todo) => contactsDao.updateContact(todo);
+  Future updateContact(Contacts contacts) =>
+      contactsDao.updateContact(contacts);
 
   Future deleteContactById(int id) => contactsDao.deleteContact(id);
 

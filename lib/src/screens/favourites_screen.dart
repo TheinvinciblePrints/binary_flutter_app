@@ -1,34 +1,25 @@
-import 'package:binaryflutterapp/src/bloc/offline/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/models/oflline/contacts.dart';
-import 'package:binaryflutterapp/src/screens/offline/edit_contact_screen.dart';
-import 'package:binaryflutterapp/src/screens/offline/offline_user_detail_screen.dart';
+import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
+import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 
-class ContactScreen extends StatefulWidget {
+class FavouriteScreen extends StatefulWidget {
   @override
-  _ContactScreenState createState() => _ContactScreenState();
+  _FavouriteScreenState createState() => _FavouriteScreenState();
 }
 
-class _ContactScreenState extends State<ContactScreen> {
-  ContactsBloc contactsBloc;
+class _FavouriteScreenState extends State<FavouriteScreen> {
   TextEditingController searchController = new TextEditingController();
 
   @override
   void initState() {
-    contactsBloc = ContactsBloc();
-    contactsBloc.getContacts();
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    contactsBloc.dispose();
-    super.dispose();
+    _onrefresh();
   }
 
   final TextStyle _titleFont = const TextStyle(
@@ -63,7 +54,7 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
             ),
             Expanded(
-              child: getContactsWidget(),
+              child: getDBContactsWidget(),
             ),
           ],
         ),
@@ -71,51 +62,28 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget getContactsWidget() {
-    /*The StreamBuilder widget,
-    basically this widget will take stream of data (todos)
-    and construct the UI (with state) based on the stream
-    */
-    return StreamBuilder(
-      stream: contactsBloc.contacts,
-      builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
-        return RefreshIndicator(
-          onRefresh: () => _onrefresh(),
-          child: getTodoCardWidget(snapshot),
-        );
-      },
-    );
+  Widget getDBContactsWidget() {
+//    return BlocBuilder<ContactBloc, List<Contacts>>(
+//      builder: (_, contactList) {
+//        return _buildDBContactUI(contactList);
+//      },
+//    );
   }
 
-  Widget getTodoCardWidget(AsyncSnapshot<List<Contacts>> snapshot) {
-    /*Since most of our operations are asynchronous
-    at initial state of the operation there will be no stream
-    so we need to handle it if this was the case
-    by showing users a processing/loading indicator*/
-    if (snapshot.hasData) {
-      /*Also handles whenever there's stream
-      but returned returned 0 records of Contacts from DB.
-      If that the case show user that you have empty Contacts
-      */
-      return snapshot.data.length != 0
-          ? RefreshIndicator(
-              onRefresh: () async {
-                _onrefresh();
-              },
-              child: ListView.builder(
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, itemPosition) {
-                  Contacts contacts = snapshot.data[itemPosition];
-                  return _buildSlideMenuItem(context, itemPosition, contacts);
-                },
-              ),
-            )
-          : Container(
-              child: Center(
-              //this is used whenever there 0
-              //in the data base
-              child: noContactMessageWidget(),
-            ));
+  Widget _buildDBContactUI(List<Contacts> contactList) {
+    if (contactList.length != 0) {
+      return RefreshIndicator(
+        onRefresh: () async {
+          _onrefresh();
+        },
+        child: ListView.builder(
+          itemCount: contactList.length,
+          itemBuilder: (context, itemPosition) {
+            Contacts contacts = contactList[itemPosition];
+            return _buildSlideMenuItem(context, itemPosition, contacts);
+          },
+        ),
+      );
     } else {
       return Center(
         /*since most of our I/O operations are done
@@ -123,14 +91,12 @@ class _ContactScreenState extends State<ContactScreen> {
         we may want to display a loading indicator
         to let the use know the app is currently
         processing*/
-        child: loadingData(),
+        child: noContactMessageWidget(),
       );
     }
   }
 
   Widget loadingData() {
-    //pull todos again
-    contactsBloc.getContacts();
     return Container(
       child: Center(
         child: CircularProgress(),
@@ -145,12 +111,12 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           children: <Widget>[
             Icon(
-              Icons.list,
+              Icons.star_border,
               size: 120,
               color: Hexcolor(AppColors.accentColor),
             ),
             Text(
-              "Start adding Contacts...",
+              "No Favourites yet",
               style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
             ),
           ],
@@ -182,14 +148,15 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget _buildRow(Contacts contacts) {
+  Widget _buildRow(Contacts contacts, int index) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => OfflineUserDetailScreen(
+              builder: (context) => UserDetailScreen(
                     contacts: contacts,
+                    contactIndex: index,
                   )),
         );
       },
@@ -209,15 +176,12 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
               trailing: Padding(
                 padding: EdgeInsets.all(10),
-                child: GestureDetector(
-                    child: Icon(
-                      contacts.is_favourite ? Icons.star : Icons.star_border,
-                      color: contacts.is_favourite ? Colors.black : null,
-                    ),
-                    onTap: () {
-                      contacts.is_favourite = !contacts.is_favourite;
-                      contactsBloc.updateContact(contacts);
-                    }),
+                child: Icon(
+                  contacts.isFavourite ? Icons.star : Icons.star_border,
+                  color: contacts.isFavourite
+                      ? Hexcolor(AppColors.accentColor)
+                      : null,
+                ),
               ),
             ),
             Divider(),
@@ -227,7 +191,8 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget _buildSlideMenuItem(BuildContext context, index, contacts) {
+  Widget _buildSlideMenuItem(
+      BuildContext context, int index, Contacts contacts) {
     return new SlideMenu(
       items: <ActionItems>[
         new ActionItems(
@@ -242,6 +207,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 MaterialPageRoute(
                   builder: (context) => EditContactScreen(
                     contacts: contacts,
+                    contactIndex: index,
                   ),
                 ),
               );
@@ -254,21 +220,21 @@ class _ContactScreenState extends State<ContactScreen> {
               color: Colors.white,
             ),
             onPress: () {
-              _showDialog(contacts);
+              _showDialog(contacts, index);
             },
             backgroudColor: Colors.red),
       ],
-      child: _buildRow(contacts),
+      child: _buildRow(contacts, index),
     );
   }
 
-  void _showDialog(Contacts item) {
+  void _showDialog(Contacts item, int _index) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: new Text("Do you want to delete the contact?"),
-          content: new Text('${item.first_name} ${item.last_name}'),
+          title: new Text(
+              "Do you want to remove ${item.first_name} ${item.last_name} as favourite?"),
           actions: <Widget>[
             new FlatButton(
               child: new Text("Cancel"),
@@ -279,8 +245,16 @@ class _ContactScreenState extends State<ContactScreen> {
             new FlatButton(
               child: new Text("Yes"),
               onPressed: () {
-                Navigator.of(context).pop();
-                contactsBloc.deleteContactById(item.id);
+                item.isFavourite = !item.isFavourite;
+
+//                DatabaseProvider.db.update(item).then(
+//                      (storedContact) =>
+//                          BlocProvider.of<ContactBloc>(context).add(
+//                        UpdateContacts(_index, item),
+//                      ),
+//                    );
+                _onrefresh();
+                Navigator.pop(context);
               },
             ),
           ],
@@ -290,6 +264,10 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   _onrefresh() async {
-    await contactsBloc.refreshContacts();
+//    await DatabaseProvider.db.getFavouriteContacts().then(
+//      (contactList) {
+//        BlocProvider.of<ContactBloc>(context).add(SetContacts(contactList));
+//      },
+//    );
   }
 }

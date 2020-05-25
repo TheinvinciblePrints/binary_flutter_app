@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:binaryflutterapp/src/bloc/online/page_option_provider.dart';
+import 'package:binaryflutterapp/src/bloc/mainpage/page_option_provider.dart';
 
 class PageOptionBloc {
   final pageController = StreamController();

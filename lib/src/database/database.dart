@@ -8,6 +8,19 @@ import 'package:sqflite/sqflite.dart';
 final contactsTABLE = 'contacts';
 
 class DatabaseProvider {
+  static const String COLUMN_ID = "id";
+  static const String COLUMN_UUID = "uuid";
+  static const String COLUMN_FIRSTNAME = "first_name";
+  static const String COLUMN_LASTNAME = "last_name";
+  static const String COLUMN_GENDER = "gender";
+  static const String COLUMN_EMAIL = "email";
+  static const String COLUMN_DOB = "dob";
+  static const String COLUMN_MOBILE = "mobile";
+  static const String COLUMN_PHOTONAME = "photoName";
+  static const String COLUMN_TITLE = "title";
+  static const String COLUMN_COMPANY = "company";
+  static const String COLUMN_FAVOURITE = "isFavourite";
+
   static final DatabaseProvider dbProvider = DatabaseProvider();
 
   Database _database;
@@ -21,7 +34,7 @@ class DatabaseProvider {
   createDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     //"ReactiveTodo.db is our database instance name
-    String path = join(documentsDirectory.path, "binary_contacts.db");
+    String path = join(documentsDirectory.path, "contactsDB.db");
 
     var database = await openDatabase(path,
         version: 1, onCreate: initDB, onUpgrade: onUpgrade);
@@ -34,18 +47,21 @@ class DatabaseProvider {
   }
 
   void initDB(Database database, int version) async {
-    await database.execute("CREATE TABLE $contactsTABLE ("
-        "id INTEGER PRIMARY KEY, "
-        "first_name TEXT, "
-        "last_name TEXT, "
-        "dob TEXT, "
-        "mobile TEXT, "
-        "title TEXT, "
-        "company TEXT, "
-        /*SQLITE doesn't have boolean type
-        so we store isFavourite as integer where 0 is false
-        and 1 is true*/
-        "is_favourite INTEGER "
-        ")");
+    await database.execute(
+      "CREATE TABLE $contactsTABLE ("
+      "$COLUMN_ID INTEGER PRIMARY KEY,"
+      "$COLUMN_UUID TEXT,"
+      "$COLUMN_FIRSTNAME TEXT,"
+      "$COLUMN_LASTNAME TEXT,"
+      "$COLUMN_GENDER TEXT,"
+      "$COLUMN_EMAIL TEXT,"
+      "$COLUMN_DOB TEXT,"
+      "$COLUMN_MOBILE TEXT,"
+      "$COLUMN_PHOTONAME TEXT,"
+      "$COLUMN_TITLE TEXT,"
+      "$COLUMN_COMPANY TEXT,"
+      "$COLUMN_FAVOURITE INTEGER"
+      ")",
+    );
   }
 }

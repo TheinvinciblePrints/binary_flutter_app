@@ -1,23 +1,28 @@
-import 'package:binaryflutterapp/src/bloc/online/page_option_bloc.dart';
-import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/screens/online/all_users_screen.dart';
-import 'package:binaryflutterapp/src/screens/online/favourites_screen.dart';
+import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/mainpage/page_option_bloc.dart';
+import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
+import 'package:binaryflutterapp/src/screens/contacts_screen.dart';
+import 'package:binaryflutterapp/src/screens/favourites_screen.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 
-class OnlineLandingScreen extends StatefulWidget {
+class LandingPage extends StatefulWidget {
+  //We load our Contacts BLoC that is used to get
+  //the stream of Contacts for StreamBuilder
+//  final AppOptionBloc appOptionBloc;
   @override
-  _OnlineLandingScreenState createState() => _OnlineLandingScreenState();
+  _LandingPageState createState() => _LandingPageState();
 }
 
-class _OnlineLandingScreenState extends State<OnlineLandingScreen> {
+class _LandingPageState extends State<LandingPage> {
   final List<String> _toggleTexts = ['All', 'Favourites'];
   PageOptionBloc pageOptionBloc;
+  ContactsBloc _contactsBloc;
 
   @override
   void initState() {
     pageOptionBloc = PageOptionBloc();
+    _contactsBloc = ContactsBloc(ContactsRepository());
     super.initState();
   }
 
@@ -33,31 +38,19 @@ class _OnlineLandingScreenState extends State<OnlineLandingScreen> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(StringUtils.online_title),
+        title: Text(StringUtils.app_title),
       ),
-      resizeToAvoidBottomPadding: false,
       body: StreamBuilder(
           stream: pageOptionBloc.getPage,
-          builder: (context, snapshot) {
+          builder: (_context, snapshot) {
             return Column(
               children: <Widget>[
-                _bodyUI(),
+                _bodyUI(context),
                 _toggleButtons(),
               ],
             );
             return Container();
           }),
-      floatingActionButton: Container(
-        margin: EdgeInsets.only(bottom: 60),
-        child: FloatingActionButton(
-          onPressed: () {},
-          backgroundColor: Hexcolor(AppColors.primaryColor),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-          ),
-        ),
-      ),
     );
   }
 
@@ -118,19 +111,20 @@ class _OnlineLandingScreenState extends State<OnlineLandingScreen> {
     );
   }
 
-  Widget _bodyUI() {
+  Widget _bodyUI(BuildContext context) {
     return Expanded(
-      child: pageChooser(pageOptionBloc.pageOptionProvider.returnedindex),
+      child:
+          pageChooser(pageOptionBloc.pageOptionProvider.returnedindex, context),
     );
   }
 
-  pageChooser(int page) {
+  pageChooser(int page, BuildContext context) {
     switch (page) {
       case 0:
-        return AllUserScreen();
+        return ContactScreen();
         break;
       case 1:
-        return OnlineFavouriteScreen();
+        return FavouriteScreen();
         break;
     }
   }

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:binaryflutterapp/src/database/database.dart';
-import 'package:binaryflutterapp/src/models/oflline/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts.dart';
 
 class ContactsDao {
   final dbProvider = DatabaseProvider.dbProvider;
@@ -9,7 +9,7 @@ class ContactsDao {
   //Adds new Contacts records
   Future<int> createContacts(Contacts contacts) async {
     final db = await dbProvider.database;
-    var result = db.insert(contactsTABLE, contacts.toDatabaseJson());
+    var result = db.insert(contactsTABLE, contacts.toMap());
     return result;
   }
 
@@ -29,17 +29,42 @@ class ContactsDao {
     }
 
     List<Contacts> contacts = result.isNotEmpty
-        ? result.map((item) => Contacts.fromDatabaseJson(item)).toList()
+        ? result.map((item) => Contacts.fromMap(item)).toList()
         : [];
     return contacts;
   }
 
-  //Update Contacts record
-  Future<int> updateContact(Contacts todo) async {
+//  Future<int> getContactByID(int id) async {
+//    final db = await dbProvider.database;
+//    var result =
+//    await db.rawQuery(contactsTABLE, where: 'id = ?', whereArgs: [id]);
+//
+//    return result;
+//  }
+
+  Future<List<Contacts>> getFavouriteContacts() async {
     final db = await dbProvider.database;
 
-    var result = await db.update(contactsTABLE, todo.toDatabaseJson(),
-        where: "id = ?", whereArgs: [todo.id]);
+    var contacts =
+        await db.rawQuery("SELECT * FROM $contactsTABLE WHERE isFavourite = 1");
+
+    List<Contacts> contactList = List<Contacts>();
+
+    contacts.forEach((currentContact) {
+      Contacts contact = Contacts.fromMap(currentContact);
+
+      contactList.add(contact);
+    });
+
+    return contactList;
+  }
+
+  //Update Contacts record
+  Future<int> updateContact(Contacts contacts) async {
+    final db = await dbProvider.database;
+
+    var result = await db.update(contactsTABLE, contacts.toMap(),
+        where: "id = ?", whereArgs: [contacts.id]);
 
     return result;
   }

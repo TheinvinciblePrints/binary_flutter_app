@@ -37,17 +37,20 @@ dev_dependencies:
     sdk: flutter
   connectivity: #lasted version
   get_it: #lasted version
-  url_launcher: #lasted version
+  url_launcher: ^5.4.10
   http: #lasted version
   sqflite: #lasted version
   path_provider: #lasted version
-  shared_preferences: #lasted version
   hexcolor: #lasted version
-  equatable: #lasted version
+  equatable: ^0.2.0
   font_awesome_flutter: #lasted version
   masked_text: ^0.0.6
-  rxdart: ^0.22.6
-  bloc: ^0.13.0
+  flutter_bloc: ^3.2.0
+  intl: ^0.16.1
+  uuid: ^2.0.4
+
+
+
 
 
 

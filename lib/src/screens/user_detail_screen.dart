@@ -1,29 +1,43 @@
-import 'package:binaryflutterapp/src/bloc/offline/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/models/oflline/contacts.dart';
-import 'package:binaryflutterapp/src/screens/offline/edit_contact_screen.dart';
+import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class OfflineUserDetailScreen extends StatefulWidget {
+class UserDetailScreen extends StatefulWidget {
   final Contacts contacts;
+  final int contactIndex;
 
-  OfflineUserDetailScreen({@required this.contacts});
+  UserDetailScreen({@required this.contacts, this.contactIndex});
 
   @override
-  _OfflineUserDetailScreenState createState() =>
-      _OfflineUserDetailScreenState();
+  _UserDetailScreenState createState() => _UserDetailScreenState();
 }
 
-class _OfflineUserDetailScreenState extends State<OfflineUserDetailScreen> {
-  ContactsBloc contactsBloc;
+class _UserDetailScreenState extends State<UserDetailScreen> {
+  String _first_name;
+  String _last_name;
+  String _gender;
+  String _email;
+  String _dob;
+  String _mobile;
+  String _photoName;
+  String _title;
+  String _company;
+  int current_year = 0;
 
   @override
   void initState() {
-    contactsBloc = ContactsBloc();
+    _first_name = widget.contacts.first_name;
+    _last_name = widget.contacts.last_name;
+    _title = widget.contacts.title;
+    _mobile = widget.contacts.mobile;
+    _company = widget.contacts.company;
+    _email = widget.contacts.email;
+
     super.initState();
   }
 
@@ -93,6 +107,7 @@ class _OfflineUserDetailScreenState extends State<OfflineUserDetailScreen> {
               MaterialPageRoute(
                 builder: (_context) => EditContactScreen(
                   contacts: widget.contacts,
+                  contactIndex: widget.contactIndex,
                 ),
               ),
             );
