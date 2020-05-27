@@ -4,8 +4,13 @@ import 'package:binaryflutterapp/src/models/contacts.dart';
 class ContactsRepository {
   final contactsDao = ContactsDao();
 
-  Future getAllContacts({String query}) =>
-      contactsDao.getContacts(query: query);
+  Future getAllContacts() => contactsDao.getContacts();
+
+  Future getFavourites() => contactsDao.getFavouriteContacts();
+
+  Future getContactById(int id) => contactsDao.getContactByID(id);
+
+  Future searchContacts(String query) => contactsDao.searchContact(query);
 
   Future insertContact(Contacts contacts) =>
       contactsDao.createContacts(contacts);

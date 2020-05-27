@@ -17,20 +17,6 @@ class AppOptionBloc {
     optionController.sink.add(appOptionProvider.selectedOption);
   }
 
-//  String getSelectedOption() {
-//    return appOptionProvider.selectedOption;
-//  }
-//
-//  Future saveOption(String value) async {
-//    await sharedPref.saveSelectedOption(
-//        CONSTANTS.SHARED_PREF_KEY_SELECTED_OPTION, value);
-//  }
-//
-//  Future<void> getSharedPrefSavedOption() {
-//    return sharedPref
-//        .readSelectedOption(CONSTANTS.SHARED_PREF_KEY_SELECTED_OPTION);
-//  }
-
   void dispose() {
     optionController.close();
   }

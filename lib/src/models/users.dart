@@ -1,11 +1,23 @@
+import 'dart:convert';
+
 class UsersResponse {
   List<Users> users;
 
   UsersResponse({this.users});
 
   UsersResponse.fromJson(List<dynamic> json) {
-    users = json.map((posts) => Users.fromJson(posts)).toList();
+    users = json.map((post) => Users.fromJson(post)).toList();
   }
+}
+
+List<Users> userFromJson(String jsonData) {
+  final data = json.decode(jsonData);
+  return List<Users>.from(data.map((item) => Users.fromJson(item)));
+}
+
+String userToJson(Data data) {
+  final jsonData = data.toJson();
+  return json.encode(jsonData);
 }
 
 class Users {
@@ -15,6 +27,11 @@ class Users {
   int totalRow;
 
   Users({this.data, this.page, this.row, this.totalRow});
+
+  @override
+  String toString() {
+    return 'Users{page: $page, row: $row, totalRow: $totalRow, data: $data}';
+  }
 
   Users.fromJson(Map<String, dynamic> json) {
     if (json['data'] != null) {

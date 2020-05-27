@@ -1,9 +1,6 @@
-import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
 import 'package:binaryflutterapp/src/screens/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class MyApp extends StatefulWidget {
@@ -17,16 +14,13 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ContactsBloc>(
-      create: (context) => ContactsBloc(ContactsRepository()),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData.light().copyWith(
-          primaryColor: Hexcolor(AppColors.primaryColor),
-          accentColor: Hexcolor(AppColors.accentColor),
-        ),
-        home: LandingPage(),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light().copyWith(
+        primaryColor: Hexcolor(AppColors.primaryColor),
+        accentColor: Hexcolor(AppColors.accentColor),
       ),
+      home: LandingPage(),
     );
   }
 

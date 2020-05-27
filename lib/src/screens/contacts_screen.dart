@@ -1,17 +1,13 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
-import 'package:binaryflutterapp/src/bloc/events/contact_events.dart';
-import 'package:binaryflutterapp/src/bloc/events/contacts_state.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
 import 'package:binaryflutterapp/src/models/contacts.dart';
-import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
 import 'package:binaryflutterapp/src/screens/add_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -21,23 +17,22 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   ContactsBloc _contactsBloc;
-  TextEditingController _searchController;
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     // create instance of the class member variables
-    _searchController = TextEditingController();
-    _contactsBloc = ContactsBloc(ContactsRepository());
+    _contactsBloc = ContactsBloc();
 
     //dispatch query event to retrieve _contact list
-    _onrefresh();
+    // _onrefresh();
 
     super.initState();
   }
 
   @override
   void dispose() {
-    _contactsBloc.close();
+    _contactsBloc.dispose();
     super.dispose();
   }
 
@@ -52,6 +47,7 @@ class _ContactScreenState extends State<ContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         color: Colors.white,
         padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
@@ -62,6 +58,9 @@ class _ContactScreenState extends State<ContactScreen> {
                   left: 20.0, right: 20, top: 15, bottom: 10),
               child: new TextField(
                 controller: _searchController,
+                onChanged: (value) {
+                  _contactsBloc.searchContacts(value);
+                },
                 autofocus: false,
                 decoration: InputDecoration(
                   hintText: 'Search Contacts',
@@ -100,17 +99,34 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget getDBContactsWidget() {
-    return BlocBuilder(
-      bloc: _contactsBloc,
-      builder: (_, state) {
-        if (state is LoadingContactState) {
-          return CircularProgress();
-        } else if (state is EmptyContactState) {
-          return noContactMessageWidget();
-        } else if (state is LoadedContactState) {
-          return _buildDBContactUI(state.list);
+//    return BlocBuilder(
+//      bloc: _contactsBloc,
+//      builder: (_, state) {
+//        if (state is LoadingContactState) {
+//          return CircularProgress();
+//        } else if (state is EmptyContactState) {
+//          return noContactMessageWidget();
+//        } else if (state is LoadedContactState) {
+//          return _buildDBContactUI(state.list);
+//        }
+//        return Container();
+//      },
+//    );
+    return StreamBuilder(
+      stream: _contactsBloc.contacts,
+      builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
+        if (snapshot.hasData) {
+          return _buildDBContactUI(snapshot.data);
+        } else {
+          return Center(
+            /*since most of our I/O operations are done
+            outside the main thread asynchronously
+            we may want to display a loading indicator
+            to let the use know the app is currently
+            processing*/
+            child: loadingData(),
+          );
         }
-        return Container();
       },
     );
   }
@@ -142,6 +158,7 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget loadingData() {
+    _contactsBloc.getContacts();
     return Container(
       child: Center(
         child: CircularProgress(),
@@ -196,14 +213,7 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget _buildRow(Contacts contacts, int index) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => UserDetailScreen(
-                    contacts: contacts,
-                    contactIndex: index,
-                  )),
-        );
+        _onTapItem(context, contacts);
       },
       child: Padding(
         padding: EdgeInsets.only(top: 0, right: 3, left: 3),
@@ -230,14 +240,8 @@ class _ContactScreenState extends State<ContactScreen> {
                     ),
                     onTap: () {
                       contacts.isFavourite = !contacts.isFavourite;
-//                      DatabaseProvider.db.update(contacts).then(
-//                            (storedContact) =>
-//                                BlocProvider.of<ContactBloc>(context).add(
-//                              UpdateContacts(index, contacts),
-//                            ),
-//                          );
                       //update item
-                      _contactsBloc.add(UpdateContactEvent(contacts));
+                      _contactsBloc.updateContact(contacts);
                     }),
               ),
             ),
@@ -264,7 +268,11 @@ class _ContactScreenState extends State<ContactScreen> {
                 MaterialPageRoute(
                   builder: (context) => EditContactScreen(
                     contacts: contacts,
-                    contactIndex: index,
+                    onEdit: (contacts) {
+                      if (contacts != null) {
+                        _onrefresh();
+                      }
+                    },
                   ),
                 ),
               );
@@ -302,7 +310,7 @@ class _ContactScreenState extends State<ContactScreen> {
             new FlatButton(
               child: new Text("Yes"),
               onPressed: () {
-                _contactsBloc.add(DeleteContactEvent(item));
+                _contactsBloc.deleteContactById(item.id);
                 Navigator.of(context).pop();
               },
             ),
@@ -312,13 +320,20 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  _onrefresh() async {
-//    await DatabaseProvider.db.getContacts().then(
-//      (contactList) {
-//        BlocProvider.of<ContactBloc>(context).add(SetContacts(contactList));
-//      },
-//    );
+  void _onTapItem(BuildContext context, Contacts contacts) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => UserDetailScreen(
+                contacts: contacts,
+                onEdit: (contacts) {
+                  _onrefresh();
+                },
+              )),
+    );
+  }
 
-    _contactsBloc.add(QueryContactEvent());
+  _onrefresh() async {
+    await _contactsBloc.getContacts();
   }
 }

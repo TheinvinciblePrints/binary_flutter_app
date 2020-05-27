@@ -1,6 +1,4 @@
-import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/mainpage/page_option_bloc.dart';
-import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
 import 'package:binaryflutterapp/src/screens/contacts_screen.dart';
 import 'package:binaryflutterapp/src/screens/favourites_screen.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
@@ -17,12 +15,10 @@ class LandingPage extends StatefulWidget {
 class _LandingPageState extends State<LandingPage> {
   final List<String> _toggleTexts = ['All', 'Favourites'];
   PageOptionBloc pageOptionBloc;
-  ContactsBloc _contactsBloc;
 
   @override
   void initState() {
     pageOptionBloc = PageOptionBloc();
-    _contactsBloc = ContactsBloc(ContactsRepository());
     super.initState();
   }
 
@@ -35,6 +31,7 @@ class _LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.

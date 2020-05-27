@@ -1,23 +1,32 @@
+import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
 import 'package:binaryflutterapp/src/models/contacts.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
+import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+typedef OnEditCallback = Function(Contacts contacts);
+typedef OnUserEditCallback = Function(Contacts contacts);
+
 class UserDetailScreen extends StatefulWidget {
   final Contacts contacts;
-  final int contactIndex;
 
-  UserDetailScreen({@required this.contacts, this.contactIndex});
+  final OnEditCallback onEdit;
+  final OnUserEditCallback onUserEdit;
+
+  UserDetailScreen({@required this.contacts, this.onEdit, this.onUserEdit});
 
   @override
   _UserDetailScreenState createState() => _UserDetailScreenState();
 }
 
 class _UserDetailScreenState extends State<UserDetailScreen> {
+  ContactsBloc _contactsBloc;
+
   String _first_name;
   String _last_name;
   String _gender;
@@ -31,14 +40,16 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
   @override
   void initState() {
+    super.initState();
+
+    _contactsBloc = ContactsBloc();
+
     _first_name = widget.contacts.first_name;
     _last_name = widget.contacts.last_name;
     _title = widget.contacts.title;
     _mobile = widget.contacts.mobile;
     _company = widget.contacts.company;
     _email = widget.contacts.email;
-
-    super.initState();
   }
 
   @override
@@ -56,24 +67,51 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         ),
         body: Padding(
           padding: EdgeInsets.only(top: 30, left: 5),
-          child: Column(
-            children: <Widget>[
-              _headerContent(context),
-              SizedBox(
-                height: 20,
-              ),
-              _centerContent(),
-              _divider(),
-              _bottomContent(),
-              _divider(),
-            ],
+          child: StreamBuilder(
+            stream: _contactsBloc.contacts,
+            builder: (BuildContext _context,
+                AsyncSnapshot<List<Contacts>> snapshot) {
+              if (snapshot.hasData) {
+                return _buildBodyUI(_context, snapshot.data);
+              } else {
+                return Center(
+                  /*since most of our I/O operations are done
+            outside the main thread asynchronously
+            we may want to display a loading indicator
+            to let the use know the app is currently
+            processing*/
+                  child: loadingData(),
+                );
+              }
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _headerContent(BuildContext _context) {
+  Widget _buildBodyUI(BuildContext context, List<Contacts> contactList) {
+    return ListView.builder(
+      itemCount: contactList.length,
+      itemBuilder: (context, itemPosition) {
+        Contacts contacts = contactList[itemPosition];
+        return Column(
+          children: <Widget>[
+            _headerContent(context, contacts),
+            SizedBox(
+              height: 20,
+            ),
+            _centerContent(contacts),
+            _divider(),
+            _bottomContent(contacts),
+            _divider(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _headerContent(BuildContext _context, Contacts contacts) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,8 +144,12 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               _context,
               MaterialPageRoute(
                 builder: (_context) => EditContactScreen(
-                  contacts: widget.contacts,
-                  contactIndex: widget.contactIndex,
+                  contacts: contacts,
+                  onEdit: (_contacts) {
+                    //print('edited ${contacts.first_name}');
+
+                    _contactsBloc.getContactByID(_contacts.id);
+                  },
                 ),
               ),
             );
@@ -121,13 +163,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     );
   }
 
-  Widget _centerContent() {
+  Widget _centerContent(Contacts contacts) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Text(
-          '${widget.contacts.first_name} ${widget.contacts.last_name}',
+          '${contacts.first_name} ${contacts.last_name}',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -138,7 +180,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           height: 5,
         ),
         Text(
-          widget.contacts.title,
+          contacts.title,
           style: TextStyle(
             fontStyle: FontStyle.italic,
             fontWeight: FontWeight.bold,
@@ -150,7 +192,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           height: 5,
         ),
         Text(
-          widget.contacts.company,
+          contacts.company,
           style: TextStyle(
             fontStyle: FontStyle.italic,
             fontWeight: FontWeight.bold,
@@ -165,7 +207,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     );
   }
 
-  Widget _bottomContent() {
+  Widget _bottomContent(Contacts contacts) {
     return Column(
       children: <Widget>[
         SizedBox(
@@ -185,7 +227,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               ),
             ),
             Text(
-              widget.contacts.mobile,
+              contacts.mobile,
               style: TextStyle(
                 fontSize: 15,
                 color: Hexcolor(
@@ -203,7 +245,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               padding: EdgeInsets.only(right: 2),
               child: GestureDetector(
                 onTap: () {
-                  _launchCaller(widget.contacts.mobile);
+                  _launchCaller(contacts.mobile);
                 },
                 child: Icon(
                   Icons.call,
@@ -216,7 +258,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               padding: EdgeInsets.only(right: 30),
               child: GestureDetector(
                 onTap: () {
-                  _sendText(widget.contacts.mobile);
+                  _sendText(contacts.mobile);
                 },
                 child: Container(
                   height: 80,
@@ -270,5 +312,14 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         throw 'Could not launch $uri';
       }
     }
+  }
+
+  Widget loadingData() {
+    _contactsBloc.getContactByID(widget.contacts.id);
+    return Container(
+      child: Center(
+        child: CircularProgress(),
+      ),
+    );
   }
 }

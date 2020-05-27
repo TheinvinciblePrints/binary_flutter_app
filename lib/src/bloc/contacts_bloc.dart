@@ -1,54 +1,66 @@
 import 'dart:async';
 
-import 'package:binaryflutterapp/src/bloc/events/contact_events.dart';
-import 'package:binaryflutterapp/src/bloc/events/contacts_state.dart';
+import 'package:binaryflutterapp/src/models/contacts.dart';
 import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ContactsBloc extends Bloc<ContactEvents, ContactStates> {
-  final ContactsRepository _contactsRepository;
-  int tdlCount = 0;
-  int isDoneCount = 0;
+class ContactsBloc {
+  //Get instance of the Repository
+  final _contactsRepository = ContactsRepository();
 
-  ContactsBloc(this._contactsRepository);
+  //Stream controller is the 'Admin' that manages
+  //the state of our stream of data like adding
+  //new data, change the state of the stream
+  //and broadcast it to observers/subscribers
+  final _contactController = StreamController<List<Contacts>>.broadcast();
+  final _favouriteController = StreamController<List<Contacts>>.broadcast();
 
-  @override
-  ContactStates get initialState => LoadingContactState();
+  get contacts => _contactController.stream;
 
-  @override
-  Stream<ContactStates> mapEventToState(ContactEvents event) async* {
-    // Add contacts event
-    if (event is AddContactEvent) {
-      //insert _contact to db
-      await _contactsRepository.insertContact(event.contact);
+  get favouritess => _favouriteController.stream;
 
-      //query db to update ui
-      add(QueryContactEvent());
-//
-    } else if (event is UpdateContactEvent) {
-      //update _todo
-      await _contactsRepository.updateContact(event.contact);
+  ContactsBloc() {
+    getContacts();
+  }
 
-      //query db to update ui
-      add(QueryContactEvent());
-    } else if (event is DeleteContactEvent) {
-      //delete _todo
-      await _contactsRepository.deleteContactById(event.contact.id);
+  getContacts({String query}) async {
+    _contactController.sink.add(await _contactsRepository.getAllContacts());
+  }
 
-      //query db to update ui
-      add(QueryContactEvent());
-    } else if (event is QueryContactEvent) {
-      print("query");
-      //get all items
-      final tdl = await _contactsRepository.getAllContacts();
+  searchContacts(String query) async {
+    _contactController.sink
+        .add(await _contactsRepository.searchContacts(query));
+  }
 
-      if (tdl.isEmpty) {
-        //yield empty state if list is empty
-        yield EmptyContactState();
-      } else {
-        //yield loaded state unto the stream with the list
-        yield LoadedContactState(tdl);
-      }
-    }
+  getContactByID(int id) async {
+    _contactController.sink.add(await _contactsRepository.getContactById(id));
+  }
+
+  getFavourites() async {
+    _favouriteController.sink.add(await _contactsRepository.getFavourites());
+  }
+
+  addContacts(Contacts contacts) async {
+    await _contactsRepository.insertContact(contacts);
+    getContacts();
+  }
+
+  updateContact(Contacts contacts) async {
+    await _contactsRepository.updateContact(contacts);
+    getContacts();
+  }
+
+  updateFavourites(Contacts contacts) async {
+    await _contactsRepository.updateContact(contacts);
+    getFavourites();
+  }
+
+  deleteContactById(int id) async {
+    _contactsRepository.deleteContactById(id);
+    getContacts();
+  }
+
+  dispose() {
+    _contactController.close();
+    _favouriteController.close();
   }
 }

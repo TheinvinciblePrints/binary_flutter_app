@@ -1,13 +1,10 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
-import 'package:binaryflutterapp/src/bloc/events/contact_events.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
 import 'package:binaryflutterapp/src/models/contacts.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 typedef OnSaveCallback = Function(Contacts contacts);
 
@@ -44,7 +41,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   @override
   void initState() {
-    _contactsBloc = BlocProvider.of<ContactsBloc>(context);
+    _contactsBloc = ContactsBloc();
     current_year = int.parse(DateFormat('yyyy').format(DateTime.now()));
     super.initState();
   }
@@ -344,37 +341,31 @@ class _AddContactScreenState extends State<AddContactScreen> {
           onPressed: () async {
             if (!_formKey.currentState.validate()) {
               return;
+            } else {
+//              try {
+//                final result = await InternetAddress.lookup('google.com');
+//                if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+//                  print('internetState: connected');
+//                }
+//              } on SocketException catch (_) {
+//                print('internetState: not connected');
+//              }
+              Contacts contacts = Contacts(
+                first_name: _first_name,
+                last_name: _last_name,
+                gender: _gender,
+                dob: _dob,
+                mobile: _mobile,
+                email: _email,
+                title: _title,
+                company: _company,
+                isFavourite: _isFavourite,
+              );
+
+              _contactsBloc.addContacts(contacts);
+              widget.onSave(contacts);
+              Navigator.pop(context);
             }
-
-            _formKey.currentState.save();
-
-            // generate UUID
-            var uuid = Uuid();
-            _UUID = uuid.v4(); // Generate a v4 (random) id
-
-            print('UUID: ${_UUID}');
-
-            Contacts contacts = Contacts(
-              UUID: _UUID,
-              first_name: _first_name,
-              last_name: _last_name,
-              gender: _gender,
-              dob: _dob,
-              mobile: _mobile,
-              email: _email,
-              title: _title,
-              company: _company,
-              isFavourite: _isFavourite,
-            );
-
-//            DatabaseProvider.db.insert(contacts).then(
-//                  (storedContact) => BlocProvider.of<ContactBloc>(context).add(
-//                    AddContact(storedContact),
-//                  ),
-//                );
-            _contactsBloc.add(AddContactEvent(contacts));
-            widget.onSave(contacts);
-            Navigator.pop(context);
           },
           child: const Text('Save', style: TextStyle(fontSize: 18)),
           color: Hexcolor(AppColors.accentColor),
@@ -387,6 +378,18 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   Future _selectDate() async {
     DateTime picked = await showDatePicker(
+        builder: (BuildContext context, Widget child) {
+          return Theme(
+            data: ThemeData.light().copyWith(
+              primaryColor: Hexcolor(AppColors.primaryColor),
+              accentColor: Hexcolor(AppColors.primaryColor),
+              colorScheme:
+                  ColorScheme.light(primary: Hexcolor(AppColors.primaryColor)),
+              buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+            ),
+            child: child,
+          );
+        },
         context: context,
         initialDate: new DateTime.now(),
         firstDate: new DateTime(1970),
@@ -394,8 +397,8 @@ class _AddContactScreenState extends State<AddContactScreen> {
             1)); // adding +1 to ensure the datepicker works even after current year
     if (picked != null)
       setState(() {
-        _dob = DateFormat("dd-MM-yyyy").format(picked);
-        _cDOB.text = _dob;
+        _dob = picked.millisecondsSinceEpoch.toString();
+        _cDOB.text = DateFormat("dd-MM-yyyy").format(picked);
       });
   }
 
@@ -403,9 +406,12 @@ class _AddContactScreenState extends State<AddContactScreen> {
     Pattern pattern =
         r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
     RegExp regex = new RegExp(pattern);
-    if (!regex.hasMatch(value))
+    if (value.isEmpty) {
+      return 'Please enter email';
+    } else if (!regex.hasMatch(value)) {
       return 'Enter Valid Email';
-    else
+    } else {
       return null;
+    }
   }
 }

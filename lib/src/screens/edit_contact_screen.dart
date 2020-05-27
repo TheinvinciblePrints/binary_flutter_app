@@ -1,3 +1,4 @@
+import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
 import 'package:binaryflutterapp/src/models/contacts.dart';
@@ -6,13 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 
+typedef OnEditCallback = Function(Contacts contacts);
+
 class EditContactScreen extends StatefulWidget {
-  static String tag = 'edit-page';
+  final OnEditCallback onEdit;
 
   final Contacts contacts;
-  final int contactIndex;
 
-  EditContactScreen({@required this.contacts, this.contactIndex});
+  EditContactScreen({@required this.contacts, this.onEdit});
 
   @override
   _EditContactScreenState createState() => _EditContactScreenState();
@@ -21,6 +23,8 @@ class EditContactScreen extends StatefulWidget {
 class _EditContactScreenState extends State<EditContactScreen> {
   final _formKey = GlobalKey<FormState>();
   final _cDOB = TextEditingController();
+
+  ContactsBloc _contactsBloc;
 
   String _value;
   var _listGender = ["Male", "Female"];
@@ -51,6 +55,8 @@ class _EditContactScreenState extends State<EditContactScreen> {
     _company = widget.contacts.company;
     _email = widget.contacts.email;
     _isFavourite = widget.contacts.isFavourite;
+
+    _contactsBloc = ContactsBloc();
 
     current_year = int.parse(DateFormat('yyyy').format(DateTime.now()));
 
@@ -358,7 +364,6 @@ class _EditContactScreenState extends State<EditContactScreen> {
 
             Contacts contacts = Contacts(
               id: id,
-              UUID: _UUID,
               first_name: _first_name,
               last_name: _last_name,
               gender: _gender,
@@ -370,11 +375,9 @@ class _EditContactScreenState extends State<EditContactScreen> {
               isFavourite: _isFavourite,
             );
 
-//            DatabaseProvider.db.update(contacts).then(
-//                  (storedContact) => BlocProvider.of<ContactBloc>(context).add(
-//                    UpdateContacts(widget.contactIndex, contacts),
-//                  ),
-//                );
+            _contactsBloc.updateContact(contacts);
+
+            widget.onEdit(contacts);
 
             Navigator.pop(context);
           },
