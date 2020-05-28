@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:binaryflutterapp/src/database/database.dart';
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ContactsDao {

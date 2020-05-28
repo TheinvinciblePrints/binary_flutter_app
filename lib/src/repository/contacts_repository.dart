@@ -1,5 +1,5 @@
 import 'package:binaryflutterapp/src/database/dao/contacts_dao.dart';
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 
 class ContactsRepository {
   final contactsDao = ContactsDao();

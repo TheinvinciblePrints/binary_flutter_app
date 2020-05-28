@@ -1,7 +1,7 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,12 +13,12 @@ typedef OnEditCallback = Function(Contacts contacts);
 typedef OnUserEditCallback = Function(Contacts contacts);
 
 class UserDetailScreen extends StatefulWidget {
-  final Contacts contacts;
+  final int contact_id;
 
   final OnEditCallback onEdit;
   final OnUserEditCallback onUserEdit;
 
-  UserDetailScreen({@required this.contacts, this.onEdit, this.onUserEdit});
+  UserDetailScreen({@required this.contact_id, this.onEdit, this.onUserEdit});
 
   @override
   _UserDetailScreenState createState() => _UserDetailScreenState();
@@ -27,29 +27,12 @@ class UserDetailScreen extends StatefulWidget {
 class _UserDetailScreenState extends State<UserDetailScreen> {
   ContactsBloc _contactsBloc;
 
-  String _first_name;
-  String _last_name;
-  String _gender;
-  String _email;
-  String _dob;
-  String _mobile;
-  String _photoName;
-  String _title;
-  String _company;
   int current_year = 0;
 
   @override
   void initState() {
-    super.initState();
-
     _contactsBloc = ContactsBloc();
-
-    _first_name = widget.contacts.first_name;
-    _last_name = widget.contacts.last_name;
-    _title = widget.contacts.title;
-    _mobile = widget.contacts.mobile;
-    _company = widget.contacts.company;
-    _email = widget.contacts.email;
+    super.initState();
   }
 
   @override
@@ -147,8 +130,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   contacts: contacts,
                   onEdit: (_contacts) {
                     //print('edited ${contacts.first_name}');
-
                     _contactsBloc.getContactByID(_contacts.id);
+                    widget.onUserEdit(_contacts);
                   },
                 ),
               ),
@@ -315,7 +298,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Widget loadingData() {
-    _contactsBloc.getContactByID(widget.contacts.id);
+    _contactsBloc.getContactByID(widget.contact_id);
     return Container(
       child: Center(
         child: CircularProgress(),

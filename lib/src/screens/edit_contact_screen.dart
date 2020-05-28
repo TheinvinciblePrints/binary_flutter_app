@@ -1,7 +1,8 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/create_user/gender_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -25,9 +26,7 @@ class _EditContactScreenState extends State<EditContactScreen> {
   final _cDOB = TextEditingController();
 
   ContactsBloc _contactsBloc;
-
-  String _value;
-  var _listGender = ["Male", "Female"];
+  GenderBloc _genderBloc;
 
   int id;
   String _UUID;
@@ -57,6 +56,9 @@ class _EditContactScreenState extends State<EditContactScreen> {
     _isFavourite = widget.contacts.isFavourite;
 
     _contactsBloc = ContactsBloc();
+    _genderBloc = GenderBloc();
+
+    _genderBloc.getGenderFromDB(widget.contacts.gender);
 
     current_year = int.parse(DateFormat('yyyy').format(DateTime.now()));
 
@@ -114,37 +116,44 @@ class _EditContactScreenState extends State<EditContactScreen> {
     }
 
     Widget _buildGender() {
-      return Row(
-        children: <Widget>[
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: 15),
-              child: Icon(
-                Icons.people,
-                color: Colors.grey,
+      return StreamBuilder(
+          stream: _genderBloc.getOption,
+          builder: (context, snapshot) {
+            return ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Radio(
+                    value: 0,
+                    activeColor: Hexcolor(AppColors.primaryColor),
+                    groupValue: _genderBloc.genderProvider.currentOption,
+                    onChanged: (newValue) => _genderBloc.updateOption(newValue),
+                  ),
+                  Text(
+                    'Male',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 50,
+                  ),
+                  Radio(
+                    activeColor: Hexcolor(AppColors.primaryColor),
+                    value: 1,
+                    groupValue: _genderBloc.genderProvider.currentOption,
+                    onChanged: (newValue) => _genderBloc.updateOption(newValue),
+                  ),
+                  Text(
+                    'Female',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Expanded(
-            flex: 7,
-            child: DropdownButtonFormField<String>(
-              value: _gender,
-              isExpanded: true,
-              hint: Text(
-                'Select Gender',
-              ),
-              onChanged: (gender) => setState(() => _gender = gender),
-              validator: (value) => value == null ? 'field required' : null,
-              items: _listGender.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
-          )
-        ],
-      );
+            );
+          });
     }
 
     Widget _buildEmail() {
@@ -361,6 +370,8 @@ class _EditContactScreenState extends State<EditContactScreen> {
             }
 
             _formKey.currentState.save();
+
+            _gender = _genderBloc.getSelectedOption();
 
             Contacts contacts = Contacts(
               id: id,

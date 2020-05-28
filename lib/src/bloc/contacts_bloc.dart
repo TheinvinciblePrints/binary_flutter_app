@@ -1,24 +1,27 @@
 import 'dart:async';
 
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
 
 class ContactsBloc {
   //Get instance of the Repository
-  final _contactsRepository = ContactsRepository();
+  ContactsRepository _contactsRepository;
 
   //Stream controller is the 'Admin' that manages
   //the state of our stream of data like adding
   //new data, change the state of the stream
   //and broadcast it to observers/subscribers
-  final _contactController = StreamController<List<Contacts>>.broadcast();
-  final _favouriteController = StreamController<List<Contacts>>.broadcast();
+  StreamController _contactController;
+  StreamController _favouriteController;
 
   get contacts => _contactController.stream;
 
   get favouritess => _favouriteController.stream;
 
   ContactsBloc() {
+    _contactController = StreamController<List<Contacts>>.broadcast();
+    _favouriteController = StreamController<List<Contacts>>.broadcast();
+    _contactsRepository = ContactsRepository();
     getContacts();
   }
 
@@ -60,7 +63,8 @@ class ContactsBloc {
   }
 
   dispose() {
-    _contactController.close();
+    if (!_contactController.isClosed && !_favouriteController.isClosed)
+      _contactController.close();
     _favouriteController.close();
   }
 }

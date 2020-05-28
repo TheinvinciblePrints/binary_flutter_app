@@ -1,13 +1,16 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/create_user/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
+import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/add_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class ContactScreen extends StatefulWidget {
 class _ContactScreenState extends State<ContactScreen> {
   ContactsBloc _contactsBloc;
   TextEditingController _searchController = TextEditingController();
+  final userRepository = UserRepository();
 
   @override
   void initState() {
@@ -78,14 +82,18 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
+        onPressed: () {
+          Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => AddContactScreen(
-                      onSave: (Contacts contacts) {
-                        _onrefresh();
-                      },
+                builder: (context) => BlocProvider<CreateBloc>(
+                      create: (BuildContext context) =>
+                          CreateBloc(userRepository: userRepository),
+                      child: AddContactScreen(
+                        onSave: (Contacts contacts) {
+                          _onrefresh();
+                        },
+                      ),
                     )),
           );
         },
@@ -117,6 +125,10 @@ class _ContactScreenState extends State<ContactScreen> {
       builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
         if (snapshot.hasData) {
           return _buildDBContactUI(snapshot.data);
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text('Error loading items'),
+          );
         } else {
           return Center(
             /*since most of our I/O operations are done
@@ -226,7 +238,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 style: _titleFont,
               ),
               subtitle: Text(
-                contacts.title,
+                '${contacts.title}',
                 style: _subtitleFont,
               ),
               trailing: Padding(
@@ -325,8 +337,12 @@ class _ContactScreenState extends State<ContactScreen> {
       context,
       MaterialPageRoute(
           builder: (context) => UserDetailScreen(
-                contacts: contacts,
+                contact_id: contacts.id,
                 onEdit: (contacts) {
+                  _onrefresh();
+                },
+                onUserEdit: (contacts) {
+                  print('edited ${contacts.first_name}');
                   _onrefresh();
                 },
               )),

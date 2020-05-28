@@ -1,7 +1,7 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/models/contacts.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
@@ -294,7 +294,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
       context,
       MaterialPageRoute(
           builder: (context) => UserDetailScreen(
-                contacts: contacts,
+                contact_id: contacts.id,
                 onEdit: (contacts) {
                   _onrefresh();
                 },

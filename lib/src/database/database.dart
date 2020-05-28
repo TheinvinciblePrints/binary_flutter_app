@@ -34,7 +34,7 @@ class DatabaseProvider {
   createDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     //"ReactiveTodo.db is our database instance name
-    String path = join(documentsDirectory.path, "contactsDB.db");
+    String path = join(documentsDirectory.path, "binaryDB.db");
 
     var database = await openDatabase(path,
         version: 1, onCreate: initDB, onUpgrade: onUpgrade);
@@ -49,7 +49,7 @@ class DatabaseProvider {
   void initDB(Database database, int version) async {
     await database.execute(
       "CREATE TABLE $contactsTABLE ("
-      "$COLUMN_ID INTEGER PRIMARY KEY KEY AUTOINCREMENT,"
+      "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,"
       "$COLUMN_UUID TEXT,"
       "$COLUMN_FIRSTNAME TEXT,"
       "$COLUMN_LASTNAME TEXT,"
