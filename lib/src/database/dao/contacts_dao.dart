@@ -12,6 +12,7 @@ class ContactsDao {
     final db = await dbProvider.database;
     var result = db.insert(contactsTABLE, contacts.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
+
     return result;
   }
 
@@ -52,8 +53,8 @@ class ContactsDao {
   Future<List<Contacts>> getFavouriteContacts() async {
     final db = await dbProvider.database;
 
-    var contacts =
-        await db.rawQuery("SELECT * FROM $contactsTABLE WHERE isFavourite = 1");
+    var contacts = await db.rawQuery(
+        "SELECT * FROM $contactsTABLE WHERE isFavourite = 1 ORDER BY favourite_index");
 
     List<Contacts> contactList = List<Contacts>();
 
@@ -81,16 +82,40 @@ class ContactsDao {
     return contactList;
   }
 
+  Future<dynamic> getContactID(String uuid) async {
+    final db = await dbProvider.database;
+    var result =
+        await db.rawQuery("SELECT id FROM $contactsTABLE WHERE uuid = $uuid");
+
+    return result;
+  }
+
+//  Future<Contacts> getContactID(String uuid) async {
+//    final db = await dbProvider.database;
+//    var result =
+//        await db.rawQuery("SELECT id FROM $contactsTABLE WHERE uuid = $uuid");
+//
+//    if (result.length > 0) {
+//      return new Contacts.fromMap(result.first);
+//    }
+//
+//    return null;
+//  }
+
   //Update Contacts record
   Future<int> updateContact(Contacts contacts) async {
     final db = await dbProvider.database;
 
     var result = await db.update(contactsTABLE, contacts.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-        where: "id = ?",
-        whereArgs: [contacts.id]);
+        where: "id = ?", whereArgs: [contacts.id]);
 
     return result;
+  }
+
+  Future<int> updateFavourite(Contacts contacts) async {
+    final db = await dbProvider.database;
+    return await db.rawUpdate(
+        'UPDATE $contactsTABLE SET isFavourite = ${contacts.isFavourite} WHERE id = ${contacts.id}');
   }
 
   //Delete Contacts records
@@ -102,7 +127,6 @@ class ContactsDao {
     return result;
   }
 
-  //We are not going to use this in the demo
   Future deleteAllContacts() async {
     final db = await dbProvider.database;
     var result = await db.delete(

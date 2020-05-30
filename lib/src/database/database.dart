@@ -20,6 +20,8 @@ class DatabaseProvider {
   static const String COLUMN_TITLE = "title";
   static const String COLUMN_COMPANY = "company";
   static const String COLUMN_FAVOURITE = "isFavourite";
+  static const String COLUMN_FAVOURITE_INDEX = "favourite_index";
+  static const String COLUMN_OPERATION = "operation";
 
   static final DatabaseProvider dbProvider = DatabaseProvider();
 
@@ -60,8 +62,17 @@ class DatabaseProvider {
       "$COLUMN_PHOTONAME TEXT,"
       "$COLUMN_TITLE TEXT,"
       "$COLUMN_COMPANY TEXT,"
-      "$COLUMN_FAVOURITE INTEGER"
+      "$COLUMN_FAVOURITE INTEGER,"
+      "$COLUMN_FAVOURITE_INDEX INTEGER,"
+      "$COLUMN_OPERATION INTEGER"
       ")",
     );
+  }
+
+  void close() async {
+    if (this._database != null) {
+      await this._database.close();
+      this._database = null;
+    }
   }
 }

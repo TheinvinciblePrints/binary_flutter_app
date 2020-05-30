@@ -1,12 +1,15 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
+import 'package:binaryflutterapp/src/config/hex_color.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
+import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef OnEditCallback = Function(Contacts contacts);
@@ -26,6 +29,7 @@ class UserDetailScreen extends StatefulWidget {
 
 class _UserDetailScreenState extends State<UserDetailScreen> {
   ContactsBloc _contactsBloc;
+  final userRepository = UserRepository();
 
   int current_year = 0;
 
@@ -108,7 +112,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                 width: 150.0,
                 height: 150.0,
                 child: CircleAvatar(
-                  backgroundColor: Hexcolor(AppColors.primaryColor),
+                  backgroundColor: HexColor.hexToColor(AppColors.primaryColor),
                   child: CircleAvatar(
                     radius: 71,
                     backgroundColor: Colors.white,
@@ -124,17 +128,19 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         GestureDetector(
           onTap: () {
             Navigator.push(
-              _context,
+              context,
               MaterialPageRoute(
-                builder: (_context) => EditContactScreen(
-                  contacts: contacts,
-                  onEdit: (_contacts) {
-                    //print('edited ${contacts.first_name}');
-                    _contactsBloc.getContactByID(_contacts.id);
-                    widget.onUserEdit(_contacts);
-                  },
-                ),
-              ),
+                  builder: (context) => BlocProvider<EditUserBloc>(
+                        create: (BuildContext context) =>
+                            EditUserBloc(userRepository: userRepository),
+                        child: EditContactScreen(
+                          contacts: contacts,
+                          onEdit: (Contacts _contacts) {
+                            _contactsBloc.getContactByID(_contacts.id);
+                            widget.onUserEdit(_contacts);
+                          },
+                        ),
+                      )),
             );
           },
           child: Icon(
@@ -203,7 +209,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               'Mobile',
               style: TextStyle(
                 fontSize: 15,
-                color: Hexcolor(
+                color: HexColor.hexToColor(
                   AppColors.primaryColor,
                 ),
                 fontWeight: FontWeight.bold,
@@ -213,7 +219,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               contacts.mobile,
               style: TextStyle(
                 fontSize: 15,
-                color: Hexcolor(
+                color: HexColor.hexToColor(
                   AppColors.primaryColor,
                 ),
                 fontWeight: FontWeight.bold,

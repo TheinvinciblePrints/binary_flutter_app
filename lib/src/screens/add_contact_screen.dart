@@ -5,14 +5,14 @@ import 'package:binaryflutterapp/src/bloc/create_user/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/gender_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
+import 'package:binaryflutterapp/src/config/hex_color.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/models/data_model.dart';
-import 'package:binaryflutterapp/src/screens/contacts_screen.dart';
+import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/utils/uuid.dart';
 import 'package:binaryflutterapp/src/widgets/form_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 
 typedef OnSaveCallback = Function(Contacts contacts);
@@ -29,8 +29,10 @@ class AddContactScreen extends StatefulWidget {
 class _AddContactScreenState extends State<AddContactScreen> {
   ContactsBloc _contactsBloc;
   GenderBloc _genderBloc;
-  CreateBloc _createBloc;
+  CreateUserBloc _createBloc;
+  final userRepository = UserRepository();
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   final _cDOB = TextEditingController();
 
@@ -52,22 +54,15 @@ class _AddContactScreenState extends State<AddContactScreen> {
   void initState() {
     _contactsBloc = ContactsBloc();
     _genderBloc = GenderBloc();
-    _createBloc = BlocProvider.of<CreateBloc>(context);
+
     current_year = int.parse(DateFormat('yyyy').format(DateTime.now()));
     super.initState();
   }
 
   @override
-  void dispose() {
-    _contactsBloc.dispose();
-    _genderBloc.dispose();
-    _createBloc.close();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.close),
@@ -82,66 +77,74 @@ class _AddContactScreenState extends State<AddContactScreen> {
   }
 
   Widget bodyUI(BuildContext context) {
-    return BlocBuilder<CreateBloc, CreateState>(
-        bloc: _createBloc,
-        builder: (_context, state) {
-          if (state is SuccessState) {
-            return saveToDB(state.data);
-          } else if (state is InitialState) {
-            return ListView(
-              padding: EdgeInsets.all(20),
-              children: <Widget>[
-                SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'Add Contact',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                _pictureContent(),
-                SizedBox(height: 20),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: <Widget>[
-                      _buildFirstName(),
-                      _buildLastName(),
-                      _buildGender(),
-                      _buildEmail(),
-                      _buildDOB(),
-                      _buildMobileNumber(),
-                      _buildCompany(),
-                      _buildTitle(),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 40,
-                ),
-                _bottomContent(context),
-              ],
-            );
-          } else if (state is SubmitState) {
-            return Center(
-              child: FormLoader(),
-            );
-          } else if (state is FailureState) {
-            return Center(
-              child: Text("Failed to insert data :" + state.message),
-            );
-          } else {
-            return Center(
-              child: Text("Failed to insert data : Unknown error"),
-            );
-          }
-        });
+    _createBloc = BlocProvider.of<CreateUserBloc>(context);
+    return BlocListener<CreateUserBloc, CreateUserState>(
+      listener: (context, state) {
+        if (state is SuccessState) {
+          saveToDB(state.data);
+        }
+      },
+      child: BlocBuilder(
+          bloc: _createBloc,
+          builder: (_context, state) {
+            if (state is InitialState) {
+              return _formWidget();
+            } else if (state is SubmitState) {
+              return Center(
+                child: FormLoader(),
+              );
+            } else if (state is FailureState) {
+              return Center(
+                child: Text("Failed to insert data :" + state.message),
+              );
+            } else {
+              return Container();
+            }
+          }),
+    );
+  }
+
+  Widget _formWidget() {
+    return ListView(
+      padding: EdgeInsets.all(20),
+      children: <Widget>[
+        SizedBox(height: 5),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Add Contact',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
+            ),
+          ],
+        ),
+        SizedBox(height: 20),
+        _pictureContent(),
+        SizedBox(height: 20),
+        Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              _buildFirstName(),
+              _buildLastName(),
+              _buildGender(),
+              _buildEmail(),
+              _buildDOB(),
+              _buildMobileNumber(),
+              _buildCompany(),
+              _buildTitle(),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 40,
+        ),
+        _bottomContent(context),
+      ],
+    );
   }
 
   Widget _buildFirstName() {
@@ -201,7 +204,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Radio(
-                  activeColor: Hexcolor(AppColors.primaryColor),
+                  activeColor: HexColor.hexToColor(AppColors.primaryColor),
                   value: 0,
                   groupValue: _genderBloc.genderProvider.currentOption,
                   onChanged: (newValue) => _genderBloc.updateOption(newValue),
@@ -216,7 +219,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                   width: 50,
                 ),
                 Radio(
-                  activeColor: Hexcolor(AppColors.primaryColor),
+                  activeColor: HexColor.hexToColor(AppColors.primaryColor),
                   value: 1,
                   groupValue: _genderBloc.genderProvider.currentOption,
                   onChanged: (newValue) => _genderBloc.updateOption(newValue),
@@ -357,7 +360,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
           width: 130.0,
           height: 130.0,
           child: CircleAvatar(
-            backgroundColor: Hexcolor(AppColors.primaryColor),
+            backgroundColor: HexColor.hexToColor(AppColors.primaryColor),
             child: CircleAvatar(
               radius: 61,
               backgroundColor: Colors.white,
@@ -380,7 +383,8 @@ class _AddContactScreenState extends State<AddContactScreen> {
         child: RaisedButton(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20.0),
-              side: BorderSide(color: Hexcolor(AppColors.accentColor))),
+              side: BorderSide(
+                  color: HexColor.hexToColor(AppColors.accentColor))),
           onPressed: () async {
             if (!_formKey.currentState.validate()) {
               return;
@@ -389,13 +393,14 @@ class _AddContactScreenState extends State<AddContactScreen> {
             _gender = _genderBloc.getSelectedOption();
 
             if (_gender.isEmpty) {
-              Scaffold.of(context).showSnackBar(SnackBar(
+              _scaffoldKey.currentState.showSnackBar(SnackBar(
                 content: Text('Please choose gender to continue'),
               ));
               return;
             }
 
             _formKey.currentState.save();
+            var uuid = Uuid().generateV4();
 
             try {
               final result = await InternetAddress.lookup('google.com');
@@ -403,7 +408,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                 print('internetState: connected');
 
                 Data contacts = Data(
-                    id: Uuid().generateV4(),
+                    id: uuid,
                     firstName: _first_name.trim(),
                     lastName: _last_name.trim(),
                     email: _email.trim(),
@@ -417,6 +422,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
               print('internetState: not connected');
 
               Contacts contacts = Contacts(
+                UUID: uuid,
                 first_name: _first_name.trim(),
                 last_name: _last_name.trim(),
                 gender: _gender.trim(),
@@ -425,16 +431,18 @@ class _AddContactScreenState extends State<AddContactScreen> {
                 email: _email.trim(),
                 title: _title.trim(),
                 company: _company.trim(),
+                operation: 1,
                 isFavourite: _isFavourite,
               );
 
+              print('CreatedUUID: $uuid');
               _contactsBloc.addContacts(contacts);
               widget.onSave(contacts);
               Navigator.pop(context);
             }
           },
           child: const Text('Save', style: TextStyle(fontSize: 18)),
-          color: Hexcolor(AppColors.accentColor),
+          color: HexColor.hexToColor(AppColors.accentColor),
           textColor: Colors.white,
           elevation: 5,
         ),
@@ -447,10 +455,10 @@ class _AddContactScreenState extends State<AddContactScreen> {
         builder: (BuildContext context, Widget child) {
           return Theme(
             data: ThemeData.light().copyWith(
-              primaryColor: Hexcolor(AppColors.primaryColor),
-              accentColor: Hexcolor(AppColors.primaryColor),
-              colorScheme:
-                  ColorScheme.light(primary: Hexcolor(AppColors.primaryColor)),
+              primaryColor: HexColor.hexToColor(AppColors.primaryColor),
+              accentColor: HexColor.hexToColor(AppColors.primaryColor),
+              colorScheme: ColorScheme.light(
+                  primary: HexColor.hexToColor(AppColors.primaryColor)),
               buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
             ),
             child: child,
@@ -482,23 +490,23 @@ class _AddContactScreenState extends State<AddContactScreen> {
     }
   }
 
-  Widget saveToDB(Data data) {
+  saveToDB(Data data) {
     Contacts contacts = Contacts(
-        UUID: data.id,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        gender: data.gender,
-        dob: data.dateOfBirth,
-        mobile: data.phoneNo,
-        email: data.email,
-        title: _title.trim(),
-        company: _company.trim(),
-        isFavourite: _isFavourite);
+      UUID: data.id,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      gender: data.gender,
+      dob: data.dateOfBirth,
+      mobile: data.phoneNo,
+      email: data.email,
+      title: _title.trim(),
+      company: _company.trim(),
+      operation: 0,
+      isFavourite: _isFavourite,
+    );
 
     _contactsBloc.addContacts(contacts);
     widget.onSave(contacts);
     Navigator.pop(context);
-
-    return ContactScreen();
   }
 }

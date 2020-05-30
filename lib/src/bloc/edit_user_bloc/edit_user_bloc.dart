@@ -1,29 +1,29 @@
-import 'package:binaryflutterapp/src/api/responses/create_user_response.dart';
+import 'package:binaryflutterapp/src/api/responses/update_user_response.dart';
 import 'package:binaryflutterapp/src/models/data_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CreateUserBloc extends Bloc<CreateEvent, CreateUserState> {
+class EditUserBloc extends Bloc<UpdateEvent, UpdateState> {
   final UserRepository _userRepository;
 
-  CreateUserBloc({@required UserRepository userRepository})
+  EditUserBloc({@required UserRepository userRepository})
       : assert(userRepository != null),
         _userRepository = userRepository;
 
   @override
-  CreateUserState get initialState => InitialState();
+  UpdateState get initialState => InitialState();
 
   @override
-  Stream<CreateUserState> mapEventToState(
-    CreateEvent event,
+  Stream<UpdateState> mapEventToState(
+    UpdateEvent event,
   ) async* {
     if (event is SubmitInput) {
       yield SubmitState();
       try {
-        CreateUserResponse status =
-            await _userRepository.createUser(event.data);
+        UpdateUserResponse status =
+            await _userRepository.updateUser(event.uuid, event.data);
 
         if (status != null) {
           yield SuccessState(status.data);
@@ -40,36 +40,35 @@ class CreateUserBloc extends Bloc<CreateEvent, CreateUserState> {
   }
 }
 
-abstract class CreateEvent extends Equatable {
-  const CreateEvent();
+abstract class UpdateEvent extends Equatable {
+  const UpdateEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class SubmitInput extends CreateEvent {
+class SubmitInput extends UpdateEvent {
   final Data data;
+  final String uuid;
 
-  const SubmitInput({
-    @required this.data,
-  });
+  const SubmitInput({@required this.data, @required this.uuid});
 
   @override
   List<Object> get props => [data];
 }
 
-abstract class CreateUserState extends Equatable {
-  const CreateUserState();
+abstract class UpdateState extends Equatable {
+  const UpdateState();
 
   @override
   List<Object> get props => [];
 }
 
-class InitialState extends CreateUserState {}
+class InitialState extends UpdateState {}
 
-class SubmitState extends CreateUserState {}
+class SubmitState extends UpdateState {}
 
-class SuccessState extends CreateUserState {
+class SuccessState extends UpdateState {
   final Data data;
 
   SuccessState(this.data);
@@ -78,7 +77,7 @@ class SuccessState extends CreateUserState {
   List<Object> get props => [data];
 }
 
-class FailureState extends CreateUserState {
+class FailureState extends UpdateState {
   final String message;
 
   FailureState(this.message);

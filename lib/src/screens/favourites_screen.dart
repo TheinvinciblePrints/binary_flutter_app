@@ -1,13 +1,17 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
 import 'package:binaryflutterapp/src/config/assets.dart';
 import 'package:binaryflutterapp/src/config/colors.dart';
+import 'package:binaryflutterapp/src/config/hex_color.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
+import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
+import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FavouriteScreen extends StatefulWidget {
   @override
@@ -17,6 +21,7 @@ class FavouriteScreen extends StatefulWidget {
 class _FavouriteScreenState extends State<FavouriteScreen> {
   TextEditingController searchController = new TextEditingController();
   ContactsBloc _contactsBloc;
+  final userRepository = UserRepository();
 
   @override
   void initState() {
@@ -41,8 +46,11 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(StringUtils.favourites_title),
+      ),
+      body: Container(
         color: Colors.white,
         padding: const EdgeInsets.only(left: 2.0, right: 2.0, bottom: 2.0),
         child: getFavouriteContactsWidget(),
@@ -146,7 +154,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             Icon(
               Icons.star_border,
               size: 120,
-              color: Hexcolor(AppColors.accentColor),
+              color: HexColor.hexToColor(AppColors.accentColor),
             ),
             Text(
               "No Favourites yet",
@@ -165,7 +173,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
           width: 55.0,
           height: 55.0,
           child: CircleAvatar(
-            backgroundColor: Hexcolor(AppColors.primaryColor),
+            backgroundColor: HexColor.hexToColor(AppColors.primaryColor),
             child: CircleAvatar(
               radius: 25,
               backgroundColor: Colors.white,
@@ -195,8 +203,9 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
           ),
           trailing: Icon(
             contacts.isFavourite ? Icons.star : Icons.star_border,
-            color:
-                contacts.isFavourite ? Hexcolor(AppColors.accentColor) : null,
+            color: contacts.isFavourite
+                ? HexColor.hexToColor(AppColors.accentColor)
+                : null,
           ),
         ),
         Divider(),
@@ -214,18 +223,32 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
               color: Colors.white,
             ),
             onPress: () {
+//              Navigator.push(
+//                context,
+//                MaterialPageRoute(
+//                  builder: (context) => EditContactScreen(
+//                    contacts: contacts,
+//                    onEdit: (contacts) {
+//                      if (contacts != null) {
+//                        _onrefresh();
+//                      }
+//                    },
+//                  ),
+//                ),
+//              );
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => EditContactScreen(
-                    contacts: contacts,
-                    onEdit: (contacts) {
-                      if (contacts != null) {
-                        _onrefresh();
-                      }
-                    },
-                  ),
-                ),
+                    builder: (context) => BlocProvider<EditUserBloc>(
+                          create: (BuildContext context) =>
+                              EditUserBloc(userRepository: userRepository),
+                          child: EditContactScreen(
+                            contacts: contacts,
+                            onEdit: (Contacts contacts) {
+                              _onrefresh();
+                            },
+                          ),
+                        )),
               );
             },
             backgroudColor: Colors.grey),
@@ -282,10 +305,13 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
     if (newIndex > oldIndex) newIndex -= 1;
 
     setState(() {
-      Contacts rb = contactList[oldIndex];
+      Contacts contacts = contactList[oldIndex];
 
       contactList.removeAt(oldIndex);
-      contactList.insert(newIndex, rb);
+      contactList.insert(newIndex, contacts);
+      contacts.favourite_index = newIndex;
+
+      _contactsBloc.updateContact(contacts);
     });
   }
 

@@ -53,7 +53,7 @@ class ContactsBloc {
   }
 
   updateFavourites(Contacts contacts) async {
-    await _contactsRepository.updateContact(contacts);
+    await _contactsRepository.updateFavourite(contacts);
     getFavourites();
   }
 
@@ -63,8 +63,7 @@ class ContactsBloc {
   }
 
   dispose() {
-    if (!_contactController.isClosed && !_favouriteController.isClosed)
-      _contactController.close();
+    _contactController.close();
     _favouriteController.close();
   }
 }

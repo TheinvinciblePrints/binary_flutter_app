@@ -10,6 +10,9 @@ class ContactsRepository {
 
   Future getContactById(int id) => contactsDao.getContactByID(id);
 
+  Future updateFavourite(Contacts contacts) =>
+      contactsDao.updateFavourite(contacts);
+
   Future searchContacts(String query) => contactsDao.searchContact(query);
 
   Future insertContact(Contacts contacts) =>

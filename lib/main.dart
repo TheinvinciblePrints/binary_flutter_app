@@ -1,7 +1,8 @@
 import 'package:binaryflutterapp/src/config/colors.dart';
+import 'package:binaryflutterapp/src/config/hex_color.dart';
+import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 class MyApp extends StatefulWidget {
   static String tag = 'home-page';
@@ -12,18 +13,17 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final userRepository = UserRepository();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light().copyWith(
-        primaryColor: Hexcolor(AppColors.primaryColor),
-        accentColor: Hexcolor(AppColors.accentColor),
+        primaryColor: HexColor.hexToColor(AppColors.primaryColor),
+        accentColor: HexColor.hexToColor(AppColors.accentColor),
       ),
-      home: LandingPage(),
+      home: HomeScreen(),
     );
   }
-
-//  _hexToColor(String code) =>
-//      Color(int.parse(code.substring(1, 7), radix: 16) + 0xFF000000);
 }

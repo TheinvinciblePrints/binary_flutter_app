@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:binaryflutterapp/src/api/exceptions/app_exceptions.dart';
 import 'package:binaryflutterapp/src/api/responses/create_user_response.dart';
+import 'package:binaryflutterapp/src/api/responses/delete_user_response.dart';
 import 'package:binaryflutterapp/src/api/responses/update_user_response.dart';
 import 'package:binaryflutterapp/src/constants/path_constants.dart';
 import 'package:http/http.dart' as http;
@@ -53,17 +54,21 @@ class ApiBaseHelper {
     return serverResponse;
   }
 
-  Future<UpdateUserResponse> put(dynamic data) async {
-    print('Api Post, url ${_baseUrl + userEndpoint}');
+  Future<UpdateUserResponse> put(String id, dynamic data) async {
+    print('Api Post, url ${_baseUrl + userEndpoint + id}');
     var serverResponse;
     try {
       var body = json.encode(data);
       print('Post params:  $body');
-      final response = await http.put(_baseUrl + userEndpoint,
+      final response = await http.put(_baseUrl + userEndpoint + id,
           headers: {"Content-Type": "application/json"}, body: body);
 
       var jsonData = json.decode(response.body);
-      serverResponse = UpdateUserResponse.fromJson(jsonData);
+      if (response.statusCode == 200) {
+        serverResponse = UpdateUserResponse.fromJson(jsonData);
+      } else {
+        throw Exception("Failed to update data");
+      }
     } on SocketException {
       print('No net');
       throw FetchDataException('No Internet connection');
@@ -73,18 +78,20 @@ class ApiBaseHelper {
     return serverResponse;
   }
 
-  Future<dynamic> delete(String url) async {
+  Future<DeleteUserResponse> delete(String url) async {
     print('Api delete, url ${_baseUrl + userEndpoint + url}');
-    var apiResponse;
+    var serverResponse;
+
     try {
       final response = await http.delete(_baseUrl + userEndpoint + url);
-      apiResponse = _returnResponse(response);
+      var jsonData = json.decode(response.body);
+      serverResponse = DeleteUserResponse.fromJson(jsonData);
     } on SocketException {
       print('No net');
       throw FetchDataException('No Internet connection');
     }
     print('api delete.');
-    return apiResponse;
+    return serverResponse;
   }
 }
 

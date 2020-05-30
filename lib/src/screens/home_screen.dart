@@ -1,18 +1,17 @@
 import 'package:binaryflutterapp/src/bloc/mainpage/page_option_bloc.dart';
 import 'package:binaryflutterapp/src/screens/contacts_screen.dart';
 import 'package:binaryflutterapp/src/screens/favourites_screen.dart';
-import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:flutter/material.dart';
 
-class LandingPage extends StatefulWidget {
+class HomeScreen extends StatefulWidget {
   //We load our Contacts BLoC that is used to get
   //the stream of Contacts for StreamBuilder
 //  final AppOptionBloc appOptionBloc;
   @override
-  _LandingPageState createState() => _LandingPageState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _LandingPageState extends State<LandingPage> {
+class _HomeScreenState extends State<HomeScreen> {
   final List<String> _toggleTexts = ['All', 'Favourites'];
   PageOptionBloc pageOptionBloc;
 
@@ -32,11 +31,6 @@ class _LandingPageState extends State<LandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(StringUtils.app_title),
-      ),
       body: StreamBuilder(
           stream: pageOptionBloc.getPage,
           builder: (_context, snapshot) {

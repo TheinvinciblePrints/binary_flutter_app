@@ -13,6 +13,8 @@ class Contacts {
   String title;
   String company;
   bool isFavourite;
+  int favourite_index;
+  int operation;
 
   Contacts(
       {this.id,
@@ -26,6 +28,8 @@ class Contacts {
       this.photoName,
       this.title,
       this.company,
+      this.operation,
+      this.favourite_index,
       this.isFavourite});
 
   Map<String, dynamic> toMap() {
@@ -40,6 +44,8 @@ class Contacts {
       DatabaseProvider.COLUMN_PHOTONAME: photoName,
       DatabaseProvider.COLUMN_TITLE: title,
       DatabaseProvider.COLUMN_COMPANY: company,
+      DatabaseProvider.COLUMN_FAVOURITE_INDEX: favourite_index,
+      DatabaseProvider.COLUMN_OPERATION: operation,
       DatabaseProvider.COLUMN_FAVOURITE: isFavourite ? 1 : 0
     };
 
@@ -62,6 +68,8 @@ class Contacts {
     photoName = map[DatabaseProvider.COLUMN_PHOTONAME];
     title = map[DatabaseProvider.COLUMN_TITLE];
     company = map[DatabaseProvider.COLUMN_COMPANY];
+    favourite_index = map[DatabaseProvider.COLUMN_FAVOURITE_INDEX];
+    operation = map[DatabaseProvider.COLUMN_OPERATION];
     isFavourite = map[DatabaseProvider.COLUMN_FAVOURITE] == 1;
   }
 }
