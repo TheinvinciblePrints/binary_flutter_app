@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/gender_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
@@ -9,6 +7,7 @@ import 'package:binaryflutterapp/src/config/hex_color.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/models/data_model.dart';
 import 'package:binaryflutterapp/src/widgets/form_loader.dart';
+import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,13 +28,8 @@ class EditContactScreen extends StatefulWidget {
 
 class _EditContactScreenState extends State<EditContactScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _cFirstName = TextEditingController();
-  final _cLastName = TextEditingController();
-  final _cEmail = TextEditingController();
   final _cDOB = TextEditingController();
-  final _cMobile = TextEditingController();
-  final _cTitle = TextEditingController();
-  final _cCompany = TextEditingController();
+  NetworkCheck networkCheck = NetworkCheck();
 
   ContactsBloc _contactsBloc;
   GenderBloc _genderBloc;
@@ -108,48 +102,6 @@ class _EditContactScreenState extends State<EditContactScreen> {
     );
   }
 
-//  Widget bodyUI(BuildContext context) {
-//    return ListView(
-//      padding: EdgeInsets.all(20),
-//      children: <Widget>[
-//        SizedBox(height: 5),
-//        Row(
-//          mainAxisAlignment: MainAxisAlignment.center,
-//          children: <Widget>[
-//            Text(
-//              'Edit Contact',
-//              style: TextStyle(
-//                  fontSize: 18,
-//                  fontWeight: FontWeight.bold,
-//                  color: Colors.black),
-//            ),
-//          ],
-//        ),
-//        SizedBox(height: 20),
-//        _pictureContent(),
-//        SizedBox(height: 20),
-//        Form(
-//          key: _formKey,
-//          child: Column(
-//            children: <Widget>[
-//              _buildFirstName(),
-//              _buildLastName(),
-//              _buildGender(),
-//              _buildEmail(),
-//              _buildDOB(),
-//              _buildMobileNumber(),
-//              _buildCompany(),
-//              _buildTitle(),
-//            ],
-//          ),
-//        ),
-//        SizedBox(
-//          height: 40,
-//        ),
-//        _bottomContent(context),
-//      ],
-//    );
-//  }
   Widget bodyUI(BuildContext context) {
     return BlocListener<EditUserBloc, UpdateState>(
       listener: (context, state) {
@@ -473,25 +425,21 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 _new_dob != null ||
                 _gender != widget.contacts.gender.trim() ||
                 widget.contacts.email != _email.trim()) {
-              try {
-                final result = await InternetAddress.lookup('google.com');
-                if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-                  print('internetState: connected');
-                  Data contacts = Data(
-                      id: widget.contacts.UUID,
-                      firstName: _first_name.trim(),
-                      lastName: _last_name.trim(),
-                      email: _email.trim(),
-                      gender: _gender.trim(),
-                      dateOfBirth: _new_dob.trim(),
-                      phoneNo: _mobile.trim());
+              final internetAvailable = await networkCheck.checkInternet();
 
-                  _editUserBloc.add(
-                      SubmitInput(data: contacts, uuid: widget.contacts.UUID));
-                }
-              } on SocketException catch (_) {
-                print('internetState: not connected');
+              if (internetAvailable != null && internetAvailable) {
+                Data contacts = Data(
+                    id: widget.contacts.UUID,
+                    firstName: _first_name.trim(),
+                    lastName: _last_name.trim(),
+                    email: _email.trim(),
+                    gender: _gender.trim(),
+                    dateOfBirth: _new_dob.trim(),
+                    phoneNo: _mobile.trim());
 
+                _editUserBloc.add(
+                    SubmitInput(data: contacts, uuid: widget.contacts.UUID));
+              } else {
                 Contacts contacts = Contacts(
                   id: widget.contacts.id,
                   UUID: widget.contacts.UUID,
@@ -512,23 +460,23 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 Navigator.pop(context);
               }
             } else {
-//              Contacts contacts = Contacts(
-//                id: id,
-//                UUID: widget.contacts.UUID,
-//                first_name: _first_name,
-//                last_name: _last_name,
-//                gender: _gender,
-//                dob: dateOfBirth,
-//                mobile: _mobile,
-//                email: _email,
-//                title: _title,
-//                company: _company,
-//                operation: 0,
-//                isFavourite: _isFavourite,
-//              );
-//
-//              _contactsBloc.updateContact(contacts);
-//              widget.onEdit(contacts);
+              Contacts contacts = Contacts(
+                id: id,
+                UUID: widget.contacts.UUID,
+                first_name: _first_name,
+                last_name: _last_name,
+                gender: _gender,
+                dob: dateOfBirth,
+                mobile: _mobile,
+                email: _email,
+                title: _title,
+                company: _company,
+                operation: 0,
+                isFavourite: _isFavourite,
+              );
+
+              _contactsBloc.updateContact(contacts);
+              widget.onEdit(contacts);
 
               Navigator.pop(context);
             }

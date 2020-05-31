@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/gender_bloc.dart';
@@ -11,6 +9,7 @@ import 'package:binaryflutterapp/src/models/data_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/utils/uuid.dart';
 import 'package:binaryflutterapp/src/widgets/form_loader.dart';
+import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +30,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
   GenderBloc _genderBloc;
   CreateUserBloc _createBloc;
   final userRepository = UserRepository();
+  NetworkCheck networkCheck = NetworkCheck();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
@@ -402,25 +402,21 @@ class _AddContactScreenState extends State<AddContactScreen> {
             _formKey.currentState.save();
             var uuid = Uuid().generateV4();
 
-            try {
-              final result = await InternetAddress.lookup('google.com');
-              if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-                print('internetState: connected');
+            final internetAvailable = await networkCheck.checkInternet();
+            print('isInternetAvailable: $internetAvailable');
 
-                Data contacts = Data(
-                    id: uuid,
-                    firstName: _first_name.trim(),
-                    lastName: _last_name.trim(),
-                    email: _email.trim(),
-                    gender: _gender.trim(),
-                    dateOfBirth: _dob.trim(),
-                    phoneNo: _mobile.trim());
+            if (internetAvailable != null && internetAvailable) {
+              Data contacts = Data(
+                  id: uuid,
+                  firstName: _first_name.trim(),
+                  lastName: _last_name.trim(),
+                  email: _email.trim(),
+                  gender: _gender.trim(),
+                  dateOfBirth: _dob.trim(),
+                  phoneNo: _mobile.trim());
 
-                _createBloc.add(SubmitInput(data: contacts));
-              }
-            } on SocketException catch (_) {
-              print('internetState: not connected');
-
+              _createBloc.add(SubmitInput(data: contacts));
+            } else {
               Contacts contacts = Contacts(
                 UUID: uuid,
                 first_name: _first_name.trim(),

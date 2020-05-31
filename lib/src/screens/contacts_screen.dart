@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/delete_bloc/delete_user_bloc.dart';
@@ -14,6 +12,7 @@ import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
+import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,6 +27,7 @@ class _ContactScreenState extends State<ContactScreen> {
   DeleteUserBloc _deleteUserBloc;
   TextEditingController _searchController = TextEditingController();
   final userRepository = UserRepository();
+  NetworkCheck networkCheck = NetworkCheck();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -397,19 +397,18 @@ class _ContactScreenState extends State<ContactScreen> {
 
                 Navigator.of(context).pop();
 
-                try {
-                  final result = await InternetAddress.lookup('google.com');
-                  if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-                    if (item.UUID != null) {
-                      _deleteUserBloc.add(DeleteSubmitInput(uuid: item.UUID));
-                    } else {
-                      _scaffoldKey.currentState.showSnackBar(SnackBar(
-                        content: Text('Empty UUID'),
-                      ));
-                      return;
-                    }
+                final internetAvailable = await networkCheck.checkInternet();
+
+                if (internetAvailable != null && internetAvailable) {
+                  if (item.UUID != null) {
+                    _deleteUserBloc.add(DeleteSubmitInput(uuid: item.UUID));
+                  } else {
+                    _scaffoldKey.currentState.showSnackBar(SnackBar(
+                      content: Text('Empty UUID'),
+                    ));
+                    return;
                   }
-                } on SocketException catch (_) {
+                } else {
                   _contactsBloc.updateContact(item);
                   _onrefresh();
                 }

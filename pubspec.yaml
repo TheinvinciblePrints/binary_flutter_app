@@ -43,10 +43,7 @@ dev_dependencies:
   masked_text: ^0.0.6
   flutter_bloc: ^3.2.0
   intl: ^0.16.1
-
-
-
-
+  data_connection_checker: ^0.3.4
 
 
 
@@ -60,11 +57,6 @@ flutter:
   assets:
     - assets/images/
 
-
-  fonts:
-    - family: WeatherIcons
-      fonts:
-        - asset: fonts/weathericons-regular.ttf
 
   #flutter pub run flutter_launcher_icons:main
 
