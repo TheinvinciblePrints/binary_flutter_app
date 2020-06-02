@@ -1,12 +1,12 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
-import 'package:binaryflutterapp/src/config/assets.dart';
-import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/config/hex_color.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
+import 'package:binaryflutterapp/src/shared/assets.dart';
+import 'package:binaryflutterapp/src/shared/colors.dart';
+import 'package:binaryflutterapp/src/shared/hex_color.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
@@ -27,7 +27,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
   void initState() {
     super.initState();
     _contactsBloc = ContactsBloc();
-//    _onrefresh();
+    _onrefresh();
   }
 
   @override
@@ -78,7 +78,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
 //      },
 //    );
     return StreamBuilder(
-      stream: _contactsBloc.favouritess,
+      stream: _contactsBloc.favourites,
       builder: (BuildContext _context, AsyncSnapshot<List<Contacts>> snapshot) {
         if (snapshot.hasData) {
           return _buildDBContactUI(_context, snapshot.data);
@@ -137,7 +137,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
   }
 
   Widget loadingData() {
-    _contactsBloc.getFavourites();
+//    _contactsBloc.getFavourites();
     return Container(
       child: Center(
         child: CircularProgress(),

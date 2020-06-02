@@ -15,6 +15,4 @@ class UserRepository {
       _helper.put(id, data);
 
   Future<DeleteUserResponse> deleteUser(String id) => _helper.delete(id);
-
-  Future getContactId(String uuid) => contactsDao.getContactID(uuid);
 }

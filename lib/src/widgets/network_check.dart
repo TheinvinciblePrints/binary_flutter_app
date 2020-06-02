@@ -10,5 +10,6 @@ class NetworkCheck {
     } on SocketException catch (_) {
       return false;
     }
+    return false;
   }
 }

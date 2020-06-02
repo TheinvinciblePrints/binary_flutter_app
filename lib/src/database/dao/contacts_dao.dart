@@ -23,8 +23,8 @@ class ContactsDao {
 
     List<Map<String, dynamic>> result;
 
-    result =
-        await db.rawQuery("SELECT * FROM $contactsTABLE ORDER BY first_name");
+    result = await db.rawQuery(
+        "SELECT * FROM $contactsTABLE WHERE operation != 3 ORDER BY first_name");
     List<Contacts> contacts = result.isNotEmpty
         ? result.map((item) => Contacts.fromMap(item)).toList()
         : [];
@@ -54,7 +54,7 @@ class ContactsDao {
     final db = await dbProvider.database;
 
     var contacts = await db.rawQuery(
-        "SELECT * FROM $contactsTABLE WHERE isFavourite = 1 ORDER BY favourite_index");
+        "SELECT * FROM $contactsTABLE WHERE operation != 3 AND isFavourite = 1 ORDER BY favourite_index");
 
     List<Contacts> contactList = List<Contacts>();
 
@@ -80,14 +80,6 @@ class ContactsDao {
       contactList.add(contact);
     });
     return contactList;
-  }
-
-  Future<dynamic> getContactID(String uuid) async {
-    final db = await dbProvider.database;
-    var result =
-        await db.rawQuery("SELECT id FROM $contactsTABLE WHERE uuid = $uuid");
-
-    return result;
   }
 
 //  Future<Contacts> getContactID(String uuid) async {

@@ -16,7 +16,7 @@ class ContactsBloc {
 
   get contacts => _contactController.stream;
 
-  get favouritess => _favouriteController.stream;
+  get favourites => _favouriteController.stream;
 
   ContactsBloc() {
     _contactController = StreamController<List<Contacts>>.broadcast();

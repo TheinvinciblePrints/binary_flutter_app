@@ -2,20 +2,22 @@ import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/delete_bloc/delete_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
-import 'package:binaryflutterapp/src/config/assets.dart';
-import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/config/hex_color.dart';
+import 'package:binaryflutterapp/src/enums/connectivity_status.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/add_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/user_detail_screen.dart';
+import 'package:binaryflutterapp/src/shared/assets.dart';
+import 'package:binaryflutterapp/src/shared/colors.dart';
+import 'package:binaryflutterapp/src/shared/hex_color.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
 import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:binaryflutterapp/src/widgets/swipe_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 
 class ContactScreen extends StatefulWidget {
   @override
@@ -44,6 +46,7 @@ class _ContactScreenState extends State<ContactScreen> {
   @override
   void dispose() {
     _contactsBloc.dispose();
+
     super.dispose();
   }
 
@@ -108,7 +111,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 ),
               ),
               Expanded(
-                child: getDBContactsWidget(),
+                child: getDBContactsWidget(context),
               ),
             ],
           ),
@@ -117,12 +120,13 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget getDBContactsWidget() {
+  Widget getDBContactsWidget(BuildContext context) {
+    _contactsBloc.getContacts();
     return StreamBuilder(
       stream: _contactsBloc.contacts,
       builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
         if (snapshot.hasData) {
-          return _buildDBContactUI(snapshot.data);
+          return _buildDBContactUI(context, snapshot.data);
         } else if (snapshot.hasError) {
           return Center(
             child: Text('Error loading items'),
@@ -141,35 +145,59 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget _buildDBContactUI(List<Contacts> contactList) {
-    if (contactList.length != 0) {
-      return RefreshIndicator(
-        onRefresh: () async {
-          _onrefresh();
-        },
-        child: ListView.builder(
-          itemCount: contactList.length,
-          itemBuilder: (context, itemPosition) {
-            Contacts contacts = contactList[itemPosition];
-            return _buildSlideMenuItem(context, itemPosition, contacts);
-//
-          },
-        ),
-      );
-    } else {
-      return Center(
-        /*since most of our I/O operations are done
+  Widget _buildDBContactUI(BuildContext context, List<Contacts> contactList) {
+//    final internetAvailable = await networkCheck.checkInternet();
+
+    var connectionStatus = Provider.of<ConnectivityStatus>(context);
+    print('hasInternet: $connectionStatus');
+
+    if (connectionStatus != null) {
+      if (connectionStatus != ConnectivityStatus.Offline) {
+        if (contactList.length == 0) {
+          return Center(
+            child: Text('Make Api Call'),
+          );
+        } else {
+          return Center(
+            /*since most of our I/O operations are done
         outside the main thread asynchronously
         we may want to display a loading indicator
         to let the use know the app is currently
         processing*/
-        child: noContactMessageWidget(),
-      );
+            child: noContactMessageWidget(),
+          );
+        }
+      } else {
+        if (contactList.length != 0) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              _onrefresh();
+            },
+            child: ListView.builder(
+              itemCount: contactList.length,
+              itemBuilder: (context, itemPosition) {
+                Contacts contacts = contactList[itemPosition];
+                return _buildSlideMenuItem(context, itemPosition, contacts);
+              },
+            ),
+          );
+        } else {
+          return Center(
+            /*since most of our I/O operations are done
+        outside the main thread asynchronously
+        we may want to display a loading indicator
+        to let the use know the app is currently
+        processing*/
+            child: noContactMessageWidget(),
+          );
+        }
+      }
+    } else {
+      return Container();
     }
   }
 
   Widget loadingData() {
-    _contactsBloc.getContacts();
     return Container(
       child: Center(
         child: CircularProgress(),
@@ -265,8 +293,11 @@ class _ContactScreenState extends State<ContactScreen> {
                     onTap: () {
                       contacts.isFavourite = !contacts.isFavourite;
 
-                      if (contacts.isFavourite)
+                      if (contacts.isFavourite) {
                         contacts.favourite_index = contacts.id;
+                      } else {
+                        contacts.favourite_index = 0;
+                      }
                       //update item
                       _contactsBloc.updateContact(contacts);
                     }),

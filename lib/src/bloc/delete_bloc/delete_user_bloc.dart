@@ -24,13 +24,7 @@ class DeleteUserBloc extends Bloc<DeleteEvent, DeleteState> {
         DeleteUserResponse status =
             await _userRepository.deleteUser(event.uuid);
 
-        print('deleteStatus: ${status.data}');
-
         if (status.data != null) {
-//          var contact_id = await _userRepository.getContactId(status.data);
-
-          print('deleteContactId: ${status.data}');
-
           yield DeleteSuccessState(status.data);
         } else {
           yield DeleteFailureState('Failed to save data');

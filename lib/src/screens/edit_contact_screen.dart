@@ -1,11 +1,11 @@
 import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user/gender_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
-import 'package:binaryflutterapp/src/config/assets.dart';
-import 'package:binaryflutterapp/src/config/colors.dart';
-import 'package:binaryflutterapp/src/config/hex_color.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/models/data_model.dart';
+import 'package:binaryflutterapp/src/shared/assets.dart';
+import 'package:binaryflutterapp/src/shared/colors.dart';
+import 'package:binaryflutterapp/src/shared/hex_color.dart';
 import 'package:binaryflutterapp/src/widgets/form_loader.dart';
 import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:flutter/material.dart';
