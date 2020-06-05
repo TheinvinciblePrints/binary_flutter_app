@@ -2,17 +2,22 @@ import 'package:binaryflutterapp/src/api/helper/api_base_helper.dart';
 import 'package:binaryflutterapp/src/api/responses/create_user_response.dart';
 import 'package:binaryflutterapp/src/api/responses/delete_user_response.dart';
 import 'package:binaryflutterapp/src/api/responses/update_user_response.dart';
-import 'package:binaryflutterapp/src/database/dao/contacts_dao.dart';
-import 'package:binaryflutterapp/src/models/data_model.dart';
+import 'package:binaryflutterapp/src/api/responses/user_response.dart';
+import 'package:binaryflutterapp/src/models/users_model.dart';
 
 class UserRepository {
-  ApiBaseHelper _helper = ApiBaseHelper();
-  final contactsDao = ContactsDao();
+  final ApiBaseHelper _helper = ApiBaseHelper();
 
-  Future<CreateUserResponse> createUser(Data data) => _helper.post(data);
+  Future<UserResponse> fetchUserList(int pageNumber, int rowNumber) async {
+    final response = await _helper.getUserList(pageNumber, rowNumber);
+    return response;
+  }
 
-  Future<UpdateUserResponse> updateUser(String id, Data data) =>
-      _helper.put(id, data);
+  Future<CreateUserResponse> createUser(Data data) => _helper.addUser(data);
 
-  Future<DeleteUserResponse> deleteUser(String id) => _helper.delete(id);
+  Future<UpdateUserResponse> updateUser(String uuid, Data data) =>
+      _helper.updateUser(uuid, data);
+
+  Future<DeleteUserResponse> deleteUser(String uuid) =>
+      _helper.deleteUser(uuid);
 }

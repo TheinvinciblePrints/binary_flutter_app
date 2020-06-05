@@ -52,7 +52,7 @@ class DatabaseProvider {
     await database.execute(
       "CREATE TABLE $contactsTABLE ("
       "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-      "$COLUMN_UUID TEXT,"
+      "$COLUMN_UUID TEXT UNIQUE,"
       "$COLUMN_FIRSTNAME TEXT,"
       "$COLUMN_LASTNAME TEXT,"
       "$COLUMN_GENDER TEXT,"

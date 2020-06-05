@@ -13,16 +13,24 @@ class ConnectivityService {
       connectionStatusController.add(_getStatusFromResult(result));
     });
   }
+
   ConnectivityStatus _getStatusFromResult(ConnectivityResult result) {
-    switch (result) {
-      case ConnectivityResult.mobile:
-        return ConnectivityStatus.Cellular;
-      case ConnectivityResult.wifi:
-        return ConnectivityStatus.WiFi;
-      case ConnectivityResult.none:
-        return ConnectivityStatus.Offline;
-      default:
-        return ConnectivityStatus.Offline;
+    if (result == ConnectivityResult.mobile ||
+        result == ConnectivityResult.wifi) {
+      return ConnectivityStatus.Online;
+    } else {
+      return ConnectivityStatus.Offline;
     }
+
+//    switch (result) {
+//      case ConnectivityResult.mobile:
+//        return ConnectivityStatus.Cellular;
+//      case ConnectivityResult.wifi:
+//        return ConnectivityStatus.WiFi;
+//      case ConnectivityResult.none:
+//        return ConnectivityStatus.Offline;
+//      default:
+//        return ConnectivityStatus.Offline;
+//    }
   }
 }

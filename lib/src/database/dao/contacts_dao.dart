@@ -17,7 +17,6 @@ class ContactsDao {
   }
 
   //Get All Contacts items
-  //Searches if query string was passed
   Future<List<Contacts>> getContacts() async {
     final db = await dbProvider.database;
 
@@ -25,6 +24,19 @@ class ContactsDao {
 
     result = await db.rawQuery(
         "SELECT * FROM $contactsTABLE WHERE operation != 3 ORDER BY first_name");
+    List<Contacts> contacts = result.isNotEmpty
+        ? result.map((item) => Contacts.fromMap(item)).toList()
+        : [];
+    return contacts;
+  }
+
+  Future<List<Contacts>> getContactsForOnline() async {
+    final db = await dbProvider.database;
+
+    List<Map<String, dynamic>> result;
+
+    result = await db.rawQuery(
+        "SELECT * FROM $contactsTABLE WHERE operation != 0 ORDER BY first_name");
     List<Contacts> contacts = result.isNotEmpty
         ? result.map((item) => Contacts.fromMap(item)).toList()
         : [];
@@ -67,32 +79,46 @@ class ContactsDao {
     return contactList;
   }
 
-  Future<List<Contacts>> getContactByID(int id) async {
-    final db = await dbProvider.database;
-    var result =
-        await db.rawQuery("SELECT * FROM $contactsTABLE WHERE id = $id");
-
-    List<Contacts> contactList = List<Contacts>();
-
-    result.forEach((currentContact) {
-      Contacts contact = Contacts.fromMap(currentContact);
-
-      contactList.add(contact);
-    });
-    return contactList;
-  }
-
-//  Future<Contacts> getContactID(String uuid) async {
+//  Future<List<Contacts>> getContactByID(int id) async {
 //    final db = await dbProvider.database;
 //    var result =
-//        await db.rawQuery("SELECT id FROM $contactsTABLE WHERE uuid = $uuid");
+//        await db.rawQuery("SELECT * FROM $contactsTABLE WHERE id = $id");
 //
-//    if (result.length > 0) {
-//      return new Contacts.fromMap(result.first);
-//    }
+//    List<Contacts> contactList = List<Contacts>();
 //
-//    return null;
+//    result.forEach((currentContact) {
+//      Contacts contact = Contacts.fromMap(currentContact);
+//
+//      contactList.add(contact);
+//    });
+//    return contactList;
 //  }
+//  Future<List<Contacts>> getContactByID(String id) async {
+//    final db = await dbProvider.database;
+//    var result =
+//        await db.rawQuery("SELECT * FROM $contactsTABLE WHERE uuid = $id");
+//
+//    List<Contacts> contactList = List<Contacts>();
+//
+//    result.forEach((currentContact) {
+//      Contacts contact = Contacts.fromMap(currentContact);
+//
+//      contactList.add(contact);
+//    });
+//    return contactList;
+//  }
+
+  Future<Contacts> getContactByID(String uuid) async {
+    final db = await dbProvider.database;
+    var result =
+        await db.rawQuery("SELECT * FROM $contactsTABLE WHERE uuid = $uuid");
+
+    if (result.length > 0) {
+      return new Contacts.fromMap(result.first);
+    }
+
+    return null;
+  }
 
   //Update Contacts record
   Future<int> updateContact(Contacts contacts) async {

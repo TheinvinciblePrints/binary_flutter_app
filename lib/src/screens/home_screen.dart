@@ -1,7 +1,13 @@
+import 'package:binaryflutterapp/src/bloc/delete_bloc/delete_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/mainpage/page_option_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/user_bloc/user_bloc.dart';
+import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/contacts_screen.dart';
 import 'package:binaryflutterapp/src/screens/favourites_screen.dart';
+import 'package:binaryflutterapp/src/shared/colors.dart';
+import 'package:binaryflutterapp/src/shared/hex_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   //We load our Contacts BLoC that is used to get
@@ -14,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final List<String> _toggleTexts = ['All', 'Favourites'];
   PageOptionBloc pageOptionBloc;
+  final userRepository = UserRepository();
 
   @override
   void initState() {
@@ -49,18 +56,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: <Widget>[
         Container(
-          margin: EdgeInsets.only(bottom: 15),
-          padding:
-              EdgeInsets.only(top: 0.0, left: 0.0, right: 0.0, bottom: 0.0),
+          margin: EdgeInsets.only(bottom: 8),
           child: Container(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 ToggleButtons(
-                  borderColor: Colors.black,
-                  fillColor: Colors.grey,
+                  borderColor: HexColor.hexToColor(AppColors.primaryColor),
+                  fillColor: Colors.grey[45],
                   borderWidth: 1.5,
-                  selectedBorderColor: Colors.black,
+                  selectedBorderColor:
+                      HexColor.hexToColor(AppColors.primaryColor),
                   selectedColor: Colors.black,
                   borderRadius: BorderRadius.circular(0),
                   children: <Widget>[
@@ -112,7 +118,19 @@ class _HomeScreenState extends State<HomeScreen> {
   pageChooser(int page, BuildContext context) {
     switch (page) {
       case 0:
-        return ContactScreen();
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<DeleteUserBloc>(
+              create: (BuildContext _context) =>
+                  DeleteUserBloc(userRepository: userRepository),
+            ),
+            BlocProvider<UserBloc>(
+              create: (BuildContext context) =>
+                  UserBloc(userRepository: userRepository),
+            ),
+          ],
+          child: ContactScreen(),
+        );
         break;
       case 1:
         return FavouriteScreen();

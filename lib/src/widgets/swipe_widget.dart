@@ -35,16 +35,22 @@ class SlideMenu extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return new _SlideMenuState();
+    return _SlideMenuState();
   }
 }
 
 class _SlideMenuState extends State<SlideMenu> {
-  ScrollController controller = new ScrollController();
+  ScrollController controller = ScrollController();
   bool isOpen = false;
 
   Size childSize;
 //  double childHeightSize;
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -57,15 +63,13 @@ class _SlideMenuState extends State<SlideMenu> {
           notification.metrics.pixels < widget.items.length * 70.0) {
         scheduleMicrotask(() {
           controller.animateTo(widget.items.length * 60.0,
-              duration: new Duration(milliseconds: 600),
-              curve: Curves.decelerate);
+              duration: Duration(milliseconds: 600), curve: Curves.decelerate);
         });
       } else if (notification.metrics.pixels > 0.0 &&
           notification.metrics.pixels < (widget.items.length * 70.0) / 2) {
         scheduleMicrotask(() {
           controller.animateTo(0.0,
-              duration: new Duration(milliseconds: 600),
-              curve: Curves.decelerate);
+              duration: Duration(milliseconds: 600), curve: Curves.decelerate);
         });
       }
     }
@@ -84,16 +88,14 @@ class _SlideMenuState extends State<SlideMenu> {
           childSize = notification.newSize;
           print(notification.newSize);
           scheduleMicrotask(() {
-            setState(() {
-//              childHeightSize = context.size.height;
-            });
+            setState(() {});
           });
         },
       );
     }
 
     List<Widget> above = <Widget>[
-      new Container(
+      Container(
         width: childSize.width,
         height: childSize.height,
         color: widget.backgroundColor,
@@ -103,7 +105,7 @@ class _SlideMenuState extends State<SlideMenu> {
     List<Widget> under = <Widget>[];
 
     for (ActionItems item in widget.items) {
-      under.add(new Container(
+      under.add(Container(
         alignment: Alignment.center,
         color: item.backgroudColor,
         width: 90.0,
@@ -111,8 +113,8 @@ class _SlideMenuState extends State<SlideMenu> {
         child: item.icon,
       ));
 
-      above.add(new InkWell(
-          child: new Container(
+      above.add(InkWell(
+          child: Container(
             alignment: Alignment.center,
             width: 90.0,
             height: 73,
@@ -123,18 +125,18 @@ class _SlideMenuState extends State<SlideMenu> {
           }));
     }
 
-    Widget items = new Container(
+    Widget items = Container(
       width: childSize.width,
       height: childSize.height,
       color: widget.backgroundColor,
-      child: new Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: under,
       ),
     );
 
     Widget scrollview = new NotificationListener(
-      child: new ListView(
+      child: ListView(
         controller: controller,
         scrollDirection: Axis.horizontal,
         children: above,
@@ -142,7 +144,7 @@ class _SlideMenuState extends State<SlideMenu> {
       onNotification: _handleScrollNotification,
     );
 
-    return new Stack(
+    return Stack(
       children: <Widget>[
         items,
         new Positioned(

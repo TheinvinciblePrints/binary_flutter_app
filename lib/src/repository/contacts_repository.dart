@@ -5,10 +5,11 @@ class ContactsRepository {
   final contactsDao = ContactsDao();
 
   Future getAllContacts() => contactsDao.getContacts();
+  Future getContactsForOnline() => contactsDao.getContactsForOnline();
 
   Future getFavourites() => contactsDao.getFavouriteContacts();
 
-  Future getContactById(int id) => contactsDao.getContactByID(id);
+  Future getContactById(String id) => contactsDao.getContactByID(id);
 
   Future updateFavourite(Contacts contacts) =>
       contactsDao.updateFavourite(contacts);

@@ -1,7 +1,6 @@
-import 'dart:async';
-
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/repository/contacts_repository.dart';
+import 'package:rxdart/rxdart.dart';
 
 class ContactsBloc {
   //Get instance of the Repository
@@ -11,22 +10,27 @@ class ContactsBloc {
   //the state of our stream of data like adding
   //new data, change the state of the stream
   //and broadcast it to observers/subscribers
-  StreamController _contactController;
-  StreamController _favouriteController;
+  var _contactController;
+  var _favouriteController;
 
-  get contacts => _contactController.stream;
+  Stream<List<Contacts>> get contacts => _contactController.stream;
 
-  get favourites => _favouriteController.stream;
+  Stream<List<Contacts>> get favourites => _favouriteController.stream;
 
   ContactsBloc() {
-    _contactController = StreamController<List<Contacts>>.broadcast();
-    _favouriteController = StreamController<List<Contacts>>.broadcast();
+    _contactController = PublishSubject<List<Contacts>>();
+    _favouriteController = PublishSubject<List<Contacts>>();
     _contactsRepository = ContactsRepository();
     getContacts();
   }
 
-  getContacts({String query}) async {
+  getContacts() async {
     _contactController.sink.add(await _contactsRepository.getAllContacts());
+  }
+
+  getContactsForOnline() async {
+    _contactController.sink
+        .add(await _contactsRepository.getContactsForOnline());
   }
 
   searchContacts(String query) async {
@@ -34,7 +38,7 @@ class ContactsBloc {
         .add(await _contactsRepository.searchContacts(query));
   }
 
-  getContactByID(int id) async {
+  getContactByID(String id) async {
     _contactController.sink.add(await _contactsRepository.getContactById(id));
   }
 

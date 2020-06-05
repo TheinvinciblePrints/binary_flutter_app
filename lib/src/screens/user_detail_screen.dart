@@ -1,4 +1,4 @@
-import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/contacts_bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
@@ -16,12 +16,12 @@ typedef OnEditCallback = Function(Contacts contacts);
 typedef OnUserEditCallback = Function(Contacts contacts);
 
 class UserDetailScreen extends StatefulWidget {
-  final int contact_id;
+  final String contactId;
 
   final OnEditCallback onEdit;
   final OnUserEditCallback onUserEdit;
 
-  UserDetailScreen({@required this.contact_id, this.onEdit, this.onUserEdit});
+  UserDetailScreen({@required this.contactId, this.onEdit, this.onUserEdit});
 
   @override
   _UserDetailScreenState createState() => _UserDetailScreenState();
@@ -136,7 +136,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                         child: EditContactScreen(
                           contacts: contacts,
                           onEdit: (Contacts _contacts) {
-                            _contactsBloc.getContactByID(_contacts.id);
+                            _contactsBloc.getContactByID(_contacts.UUID);
                             widget.onUserEdit(_contacts);
                           },
                         ),
@@ -304,7 +304,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Widget loadingData() {
-    _contactsBloc.getContactByID(widget.contact_id);
+    _contactsBloc.getContactByID(widget.contactId);
     return Container(
       child: Center(
         child: CircularProgress(),

@@ -1,5 +1,5 @@
 import 'package:binaryflutterapp/src/api/responses/create_user_response.dart';
-import 'package:binaryflutterapp/src/models/data_model.dart';
+import 'package:binaryflutterapp/src/models/users_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';

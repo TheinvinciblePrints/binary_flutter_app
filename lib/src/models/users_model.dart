@@ -1,10 +1,3 @@
-import 'dart:convert';
-
-String userToJson(Data data) {
-  final jsonData = data.toJson();
-  return json.encode(jsonData);
-}
-
 class Data {
   String id;
   String firstName;

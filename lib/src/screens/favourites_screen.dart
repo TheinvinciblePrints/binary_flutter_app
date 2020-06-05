@@ -1,4 +1,4 @@
-import 'package:binaryflutterapp/src/bloc/contacts_bloc.dart';
+import 'package:binaryflutterapp/src/bloc/contacts_bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
@@ -320,7 +320,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
       context,
       MaterialPageRoute(
           builder: (context) => UserDetailScreen(
-                contact_id: contacts.id,
+                contactId: contacts.UUID,
                 onEdit: (contacts) {
                   _onrefresh();
                 },

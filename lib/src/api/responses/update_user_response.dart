@@ -1,4 +1,4 @@
-import 'package:binaryflutterapp/src/models/data_model.dart';
+import 'package:binaryflutterapp/src/models/users_model.dart';
 
 class UpdateUserResponse {
   Data data;
