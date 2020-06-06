@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:binaryflutterapp/src/bloc/contacts_bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user_bloc/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user_bloc/gender_bloc.dart';
@@ -10,8 +12,10 @@ import 'package:binaryflutterapp/src/shared/hex_color.dart';
 import 'package:binaryflutterapp/src/utils/uuid.dart';
 import 'package:binaryflutterapp/src/widgets/form_loader.dart';
 import 'package:binaryflutterapp/src/widgets/network_check.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 typedef OnSaveCallback = Function(Contacts contacts);
@@ -35,6 +39,12 @@ class _AddContactScreenState extends State<AddContactScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   final _cDOB = TextEditingController();
+
+  File imageFile;
+  int selectedtitle;
+  final minimumpadding = 5.0;
+
+  final picker = ImagePicker();
 
   String _UUID;
   String _first_name;
@@ -122,7 +132,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
           ],
         ),
         SizedBox(height: 20),
-        _pictureContent(),
+        chooseImageRow(context),
         SizedBox(height: 20),
         Form(
           key: _formKey,
@@ -372,6 +382,98 @@ class _AddContactScreenState extends State<AddContactScreen> {
         ),
       ],
     );
+  }
+
+  Widget chooseImageRow(BuildContext context) {
+    AssetImage assetimage = AssetImage(Assets.iconProfile);
+    Image staticImage = Image(image: assetimage, width: 125.0, height: 125.0);
+
+    return Container(
+      width: 130.0,
+      height: 130.0,
+      decoration: BoxDecoration(
+        // Circle shape
+        shape: BoxShape.circle,
+        color: Colors.white,
+        // The border you want
+        border: Border.all(
+          width: 3.0,
+          color: HexColor.hexToColor(AppColors.primaryColor),
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () {
+          openActionSheet(context);
+        },
+        child: imageFile == null
+            ? staticImage
+            : CircleAvatar(
+                backgroundColor: Colors.white,
+                child: ClipRRect(
+                  borderRadius: new BorderRadius.all(new Radius.circular(40.0)),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.transparent,
+                    radius: 62.0,
+                    backgroundImage: FileImage(imageFile),
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  openActionSheet(BuildContext context) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          message: Text(
+            "Choose image from",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text("Cancel"),
+            isDestructiveAction: true,
+          ),
+          actions: <Widget>[
+            CupertinoActionSheetAction(
+              onPressed: () {
+                openGallery();
+                Navigator.of(context).pop();
+              },
+              child: Text("Gallery"),
+            ),
+            CupertinoActionSheetAction(
+                onPressed: () {
+                  openCamera();
+                  Navigator.of(context).pop();
+                },
+                child: Text("Camera")),
+          ],
+        );
+      },
+    );
+  }
+
+  openCamera() async {
+    var pickedFile = await picker.getImage(source: ImageSource.camera);
+    setState(() {
+      imageFile = File(pickedFile.path);
+    });
+  }
+
+  openGallery() async {
+    var pickedFile = await picker.getImage(
+      source: ImageSource.gallery,
+      maxHeight: 480,
+      maxWidth: 480,
+    );
+    setState(() {
+      imageFile = File(pickedFile.path);
+    });
   }
 
   Widget _bottomContent(BuildContext context) {

@@ -19,6 +19,7 @@ import 'package:binaryflutterapp/src/shared/hex_color.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:binaryflutterapp/src/widgets/bottom_loader.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
+import 'package:binaryflutterapp/src/widgets/error_view.dart';
 import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,6 +41,8 @@ class _ContactScreenState extends State<ContactScreen> {
   NetworkCheck networkCheck = NetworkCheck();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
+  bool isOnline = false;
+
   var connectionStatus;
   ScrollController _apiListScrollController = ScrollController();
   ScrollController _dBListScrollController = ScrollController();
@@ -52,7 +55,7 @@ class _ContactScreenState extends State<ContactScreen> {
     _contactsBloc = ContactsBloc();
     _userBloc = BlocProvider.of<UserBloc>(context);
 //    bloc.fetchUsers();
-//    _userBloc.add(UsersFetched());
+    _userBloc.add(UsersFetched());
     super.initState();
   }
 
@@ -136,9 +139,11 @@ class _ContactScreenState extends State<ContactScreen> {
     if (connectionStatus != null) {
       if (connectionStatus != ConnectivityStatus.Offline) {
 //          _userBloc.add(UsersFetched());
-//          toast("You are online", Toast.LENGTH_SHORT, ToastGravity.TOP,
-//              Colors.green);
-        _userBloc.add(UsersFetched());
+        toast("You are online", Toast.LENGTH_SHORT, ToastGravity.TOP,
+            Colors.green);
+//        _userBloc.add(UsersFetched());
+        isOnline = true;
+
         return BlocBuilder(
             bloc: _userBloc,
             builder: (_context, state) {
@@ -167,8 +172,9 @@ class _ContactScreenState extends State<ContactScreen> {
               } else if (state is UserInitial) {
                 return loadingData();
               } else if (state is UserFailure) {
-                return Center(
-                  child: Text("Failed to load data"),
+                return ErrorView(
+                  message: 'Failed to load data',
+                  action: refreshApiList,
                 );
               } else {
                 return loadingData();
@@ -177,6 +183,9 @@ class _ContactScreenState extends State<ContactScreen> {
       } else {
         toast("You are offline", Toast.LENGTH_SHORT, ToastGravity.TOP,
             Colors.red);
+
+        isOnline = false;
+
         _contactsBloc.getContacts();
         return StreamBuilder(
           stream: _contactsBloc.contacts,
@@ -327,7 +336,7 @@ class _ContactScreenState extends State<ContactScreen> {
 //                        contacts.favourite_index = 0;
 //                      }
                       //update item
-                      _contactsBloc.updateContact(contacts);
+                      _contactsBloc.updateFavourites(contacts);
                     }),
               ),
             ),
@@ -376,7 +385,7 @@ class _ContactScreenState extends State<ContactScreen> {
       context,
       MaterialPageRoute(
           builder: (context) => UserDetailScreen(
-                contactId: contacts.UUID,
+                contacts: contacts,
                 onEdit: (contacts) {
                   _onrefresh();
                 },
@@ -677,5 +686,9 @@ class _ContactScreenState extends State<ContactScreen> {
             return _buildApiSlideMenuItem(context, index, data);
           }
         });
+  }
+
+  void refreshApiList() {
+    _userBloc.add(UsersFetched());
   }
 }

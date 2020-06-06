@@ -320,7 +320,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
       context,
       MaterialPageRoute(
           builder: (context) => UserDetailScreen(
-                contactId: contacts.UUID,
+                contacts: contacts,
                 onEdit: (contacts) {
                   _onrefresh();
                 },

@@ -133,7 +133,7 @@ class ContactsDao {
   Future<int> updateFavourite(Contacts contacts) async {
     final db = await dbProvider.database;
     return await db.rawUpdate(
-        'UPDATE $contactsTABLE SET isFavourite = ${contacts.isFavourite} WHERE id = ${contacts.id}');
+        'UPDATE $contactsTABLE SET isFavourite = ${contacts.isFavourite} WHERE uuid = ${contacts.UUID}');
   }
 
   //Delete Contacts records

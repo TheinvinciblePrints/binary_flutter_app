@@ -34,19 +34,20 @@ dev_dependencies:
     sdk: flutter
   connectivity: #lasted version
   provider: ^4.0.1
-  get_it: #lasted version
   url_launcher: ^5.4.10
   http: #lasted version
   sqflite: ^1.3.0+1
   path_provider: #lasted version
   equatable: ^1.0.0
   font_awesome_flutter: #lasted version
-  masked_text: ^0.0.6
   flutter_bloc: ^3.2.0
   flutter_slidable: ^0.5.4
   intl: ^0.16.1
   rxdart: ^0.23.1
   fluttertoast: ^3.1.3
+  image_picker: ^0.6.7+1
+
+
 
 
 
