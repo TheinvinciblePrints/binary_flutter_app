@@ -63,18 +63,18 @@ class UserBloc extends Bloc<UserEvent, UserState> {
             contactList.add(contacts);
           }
 
-//          List<Data> dataResponse = response.data;
+          List<Data> dataResponse = response.data;
 
-          contactList.sort((a, b) {
-            return a.first_name
+          dataResponse.sort((a, b) {
+            return a.firstName
                 .toLowerCase()
-                .compareTo(b.last_name.toLowerCase());
+                .compareTo(b.lastName.toLowerCase());
           });
 
-          yield UserSuccess(data: contactList, hasReachedMax: false);
+          yield UserSuccess(data: dataResponse, hasReachedMax: false);
           return;
         }
-        if (currentState is UserSuccess) {
+        if (currentState is UserSuccess && currentState.hasReachedMax != true) {
           pageNumber++;
           final response =
               await userRepository.fetchUserList(pageNumber, rowNumber);
@@ -103,20 +103,20 @@ class UserBloc extends Bloc<UserEvent, UserState> {
             }
           }
 
-          List<Contacts> loadedData = currentState.data + loadedContacts;
+          List<Data> loadedData = currentState.data + response.data;
 
           print('loadedData: ${loadedData.length}');
 
-          contactList.sort((a, b) {
-            return a.first_name
+          loadedData.sort((a, b) {
+            return a.firstName
                 .toLowerCase()
-                .compareTo(b.last_name.toLowerCase());
+                .compareTo(b.lastName.toLowerCase());
           });
 
           yield response.data.isEmpty
               ? currentState.copyWith(hasReachedMax: true)
               : UserSuccess(
-                  data: contactList,
+                  data: loadedData,
                   hasReachedMax: false,
                 );
         }

@@ -2,12 +2,12 @@ import 'package:binaryflutterapp/src/bloc/contacts_bloc/contacts_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/create_user_bloc/create_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/delete_bloc/delete_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/edit_user_bloc/edit_user_bloc.dart';
-import 'package:binaryflutterapp/src/bloc/user_bloc/new_user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/user_bloc/user_bloc.dart';
 import 'package:binaryflutterapp/src/bloc/user_bloc/user_event.dart';
 import 'package:binaryflutterapp/src/bloc/user_bloc/user_state.dart';
 import 'package:binaryflutterapp/src/enums/connectivity_status.dart';
 import 'package:binaryflutterapp/src/models/contacts_model.dart';
+import 'package:binaryflutterapp/src/models/users_model.dart';
 import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/screens/add_contact_screen.dart';
 import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
@@ -42,8 +42,9 @@ class _ContactScreenState extends State<ContactScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   bool isOnline = false;
-  bool isRefreshed = false;
+  bool isRefreshed;
   bool hasReachedMax = false;
+  bool isApiLoaded;
 
   var connectionStatus;
   ScrollController _apiListScrollController = ScrollController();
@@ -54,16 +55,18 @@ class _ContactScreenState extends State<ContactScreen> {
     _apiListScrollController.addListener(_onScroll);
     _contactsBloc = ContactsBloc();
     _userBloc = BlocProvider.of<UserBloc>(context);
+    isRefreshed = false;
+    isApiLoaded = false;
 //    bloc.fetchUsers();
 //    _userBloc.add(UsersFetched());
+    print('methodCalled: initState');
     super.initState();
   }
 
   @override
   void dispose() {
+    print('methodCalled: dispose');
     _contactsBloc.dispose();
-    _userBloc.close();
-    bloc.dispose();
     _apiListScrollController.dispose();
     super.dispose();
   }
@@ -78,6 +81,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('methodCalled: mainBuild');
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -135,106 +139,69 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget contactWidget(BuildContext context) {
-    _contactsBloc.getContacts();
-    return StreamBuilder(
-      stream: _contactsBloc.contacts,
-      builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
-        if (snapshot.hasData) {
-          return _buildDBContactUI(context, snapshot.data);
-        } else if (snapshot.hasError) {
-          return Center(
-            child: Text('Error loading items'),
-          );
-        } else {
-          return Center(
-            /*since most of our I/O operations are done
+    print('methodCalled: contactWidget');
+
+    connectionStatus = Provider.of<ConnectivityStatus>(context);
+
+    if (connectionStatus != null) {
+      if (connectionStatus != ConnectivityStatus.Offline) {
+        isOnline = true;
+
+        return apiCallWidget();
+      } else {
+        isOnline = false;
+        if (!isRefreshed) {
+          toast("You are offline", Toast.LENGTH_SHORT, ToastGravity.TOP,
+              Colors.red);
+        }
+        _contactsBloc.getContacts();
+        return StreamBuilder(
+          stream: _contactsBloc.contacts,
+          builder:
+              (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
+            if (snapshot.hasData) {
+              return _buildDBContactUI(context, snapshot.data);
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text('Error loading items'),
+              );
+            } else {
+              return Center(
+                /*since most of our I/O operations are done
             outside the main thread asynchronously
             we may want to display a loading indicator
             to let the use know the app is currently
             processing*/
-            child: loadingData(),
-          );
-        }
-      },
-    );
+                child: loadingData(),
+              );
+            }
+          },
+        );
+      }
+    } else {
+      return Container();
+    }
   }
 
   Widget _buildDBContactUI(BuildContext context, List<Contacts> contactList) {
-    connectionStatus = Provider.of<ConnectivityStatus>(context);
-
-    if (connectionStatus != null) {
-      if (contactList.length != 0) {
-        if (connectionStatus != ConnectivityStatus.Offline) {
-//          _userBloc.add(UsersFetched());
-          isOnline = true;
-          return dbContactListWidget(contactList);
-        } else {
-          isOnline = false;
-          if (!isRefreshed) {
-            toast("You are offline", Toast.LENGTH_SHORT, ToastGravity.TOP,
-                Colors.red);
-
-            isRefreshed = true;
-          }
-
-          return dbContactListWidget(contactList);
-        }
-      } else {
-        if (connectionStatus != ConnectivityStatus.Offline) {
-          //_userBloc.add(UsersFetched());
-          _userBloc.add(UsersFetched());
-          isOnline = true;
-          toast("You are online", Toast.LENGTH_SHORT, ToastGravity.TOP,
-              Colors.green);
-
-          return BlocBuilder(
-              bloc: _userBloc,
-              builder: (_context, state) {
-                if (state is UserSuccess) {
-                  if (state.data.isEmpty) {
-                    return Center(
-                      child: Text('No users'),
-                    );
-                  }
-                  hasReachedMax = state.hasReachedMax;
-                  return ListView.builder(
-                    itemBuilder: (BuildContext context, int index) {
-//                      Contacts contacts = state.data[index];
-                      return index >= state.data.length
-                          ? BottomLoader()
-                          : _buildSlideMenuItem(
-                              context, index, state.data[index]);
-                    },
-                    itemCount: state.hasReachedMax
-                        ? state.data.length
-                        : state.data.length + 1,
-                    controller: _apiListScrollController,
-                  );
-                } else if (state is UserInitial) {
-                  return loadingUsersData();
-                } else if (state is UserFailure) {
-                  return ErrorView(
-                    message: 'Failed to load data',
-                    action: refreshApiList,
-                  );
-                } else {
-                  return loadingData();
-                }
-              });
-        } else {
-          isOnline = false;
-          toast("You are offline", Toast.LENGTH_SHORT, ToastGravity.TOP,
-              Colors.red);
-          return Center(
-            /*since most of our I/O operations are done
+    if (contactList.length != 0) {
+      return dbContactListWidget(contactList);
+    } else {
+      return Center(
+        /*since most of our I/O operations are done
         outside the main thread asynchronously
         we may want to display a loading indicator
         to let the use know the app is currently
         processing*/
-            child: noContactMessageWidget(),
-          );
-        }
-      }
+        child: noContactMessageWidget(),
+      );
+    }
+  }
+
+  Widget _buildApiContactUI(
+      BuildContext context, List<Contacts> contactList, List<Data> data) {
+    if (contactList.length != 0) {
+      return apiContactListWidget(contactList, data);
     } else {
       return Container();
     }
@@ -372,11 +339,13 @@ class _ContactScreenState extends State<ContactScreen> {
 
   Widget _buildSlideMenuItem(
       BuildContext context, int index, Contacts contacts) {
+    isRefreshed = true;
     _deleteUserBloc = BlocProvider.of<DeleteUserBloc>(context);
 
     return BlocListener<DeleteUserBloc, DeleteState>(
       listener: (context, state) {
         if (state is DeleteSuccessState) {
+          _onrefresh();
           updateDB(context, state.UUID, contacts.id);
         }
       },
@@ -386,7 +355,7 @@ class _ContactScreenState extends State<ContactScreen> {
             if (state is DeleteInitialState) {
               return _slideMenuWidget(context, index, contacts);
             } else if (state is DeleteSubmitState) {
-              _searchController.clear();
+              print('deleteIndex: $index');
               return Center(
                 child: CircularProgressIndicator(),
               );
@@ -398,6 +367,31 @@ class _ContactScreenState extends State<ContactScreen> {
               return Container();
             }
           }),
+    );
+  }
+
+  Widget _buildApiSlideMenuItem(BuildContext context, List<Data> data) {
+    _contactsBloc.getContacts();
+    return StreamBuilder(
+      stream: _contactsBloc.contacts,
+      builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
+        if (snapshot.hasData) {
+          return _buildApiContactUI(context, snapshot.data, data);
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text('Error loading items'),
+          );
+        } else {
+          return Center(
+            /*since most of our I/O operations are done
+            outside the main thread asynchronously
+            we may want to display a loading indicator
+            to let the use know the app is currently
+            processing*/
+            child: loadingData(),
+          );
+        }
+      },
     );
   }
 
@@ -625,6 +619,7 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget dbContactListWidget(List<Contacts> _contactList) {
+//    print('dbListLength: ${_contactList.length}');
     return ListView.builder(
       itemCount: _contactList.length,
       itemBuilder: (context, itemPosition) {
@@ -634,14 +629,33 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
+  Widget apiContactListWidget(List<Contacts> _contactList, List<Data> data) {
+//    return ListView.builder(
+//      itemCount: _contactList.length,
+//      itemBuilder: (context, itemPosition) {
+//        Contacts contacts = _contactList[itemPosition];
+//        return _buildSlideMenuItem(context, itemPosition, contacts);
+//      },
+//    );
+    isApiLoaded = true;
+    return ListView.builder(
+      itemBuilder: (BuildContext context, int index) {
+        return index >= _contactList.length
+            ? BottomLoader()
+            : _buildSlideMenuItem(context, index, _contactList[index]);
+      },
+      itemCount: hasReachedMax ? _contactList.length : _contactList.length + 1,
+      controller: _apiListScrollController,
+    );
+  }
+
   void _onScroll() {
     final maxScroll = _apiListScrollController.position.maxScrollExtent;
     final currentScroll = _apiListScrollController.position.pixels;
     if (maxScroll - currentScroll <= _scrollThreshold) {
-      if (connectionStatus != ConnectivityStatus.Offline) {
-//        bloc.fetchMoreCountries();
+      if (isOnline) {
         _userBloc.add(UsersFetched());
-      } else {}
+      }
     }
   }
 
@@ -649,29 +663,31 @@ class _ContactScreenState extends State<ContactScreen> {
     _userBloc.add(UsersFetched());
   }
 
-  _buildApiWidget(BuildContext context, int itemPosition) {
-    _contactsBloc.getContacts();
-    return StreamBuilder(
-      stream: _contactsBloc.contacts,
-      builder: (BuildContext context, AsyncSnapshot<List<Contacts>> snapshot) {
-        if (snapshot.hasData) {
-          Contacts contacts = snapshot.data[itemPosition];
-          return _buildSlideMenuItem(context, itemPosition, contacts);
-        } else if (snapshot.hasError) {
-          return Center(
-            child: Text('Error loading items'),
-          );
-        } else {
-          return Center(
-            /*since most of our I/O operations are done
-            outside the main thread asynchronously
-            we may want to display a loading indicator
-            to let the use know the app is currently
-            processing*/
-            child: loadingData(),
-          );
-        }
-      },
-    );
+  Widget apiCallWidget() {
+    if (!isApiLoaded) {
+      _userBloc.add(UsersFetched());
+    }
+    return BlocBuilder(
+        bloc: _userBloc,
+        builder: (_context, state) {
+          if (state is UserSuccess) {
+            if (state.data.isEmpty) {
+              return Center(
+                child: Text('No users'),
+              );
+            }
+            hasReachedMax = state.hasReachedMax;
+            return _buildApiSlideMenuItem(context, state.data);
+          } else if (state is UserInitial) {
+            return loadingUsersData();
+          } else if (state is UserFailure) {
+            return ErrorView(
+              message: 'Failed to load data',
+              action: refreshApiList,
+            );
+          } else {
+            return loadingData();
+          }
+        });
   }
 }
