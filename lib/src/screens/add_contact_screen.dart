@@ -9,6 +9,7 @@ import 'package:binaryflutterapp/src/repository/user_repository.dart';
 import 'package:binaryflutterapp/src/shared/assets.dart';
 import 'package:binaryflutterapp/src/shared/colors.dart';
 import 'package:binaryflutterapp/src/shared/hex_color.dart';
+import 'package:binaryflutterapp/src/utils/image_utility.dart';
 import 'package:binaryflutterapp/src/utils/uuid.dart';
 import 'package:binaryflutterapp/src/widgets/form_loader.dart';
 import 'package:binaryflutterapp/src/widgets/network_check.dart';
@@ -462,17 +463,17 @@ class _AddContactScreenState extends State<AddContactScreen> {
     var pickedFile = await picker.getImage(source: ImageSource.camera);
     setState(() {
       imageFile = File(pickedFile.path);
+      _photoName = ImageUtility.base64String(imageFile.readAsBytesSync());
     });
   }
 
   openGallery() async {
     var pickedFile = await picker.getImage(
       source: ImageSource.gallery,
-      maxHeight: 480,
-      maxWidth: 480,
     );
     setState(() {
       imageFile = File(pickedFile.path);
+      _photoName = ImageUtility.base64String(imageFile.readAsBytesSync());
     });
   }
 
@@ -527,13 +528,13 @@ class _AddContactScreenState extends State<AddContactScreen> {
                 dob: _dob.trim(),
                 mobile: _mobile.trim(),
                 email: _email.trim(),
+//                photoName: _photoName,
                 title: _title.trim(),
                 company: _company.trim(),
                 operation: 1,
                 isFavourite: _isFavourite,
               );
 
-              print('CreatedUUID: $uuid');
               _contactsBloc.addContacts(contacts);
               widget.onSave(contacts);
               Navigator.pop(context);
@@ -597,6 +598,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
       dob: data.dateOfBirth,
       mobile: data.phoneNo,
       email: data.email,
+//      photoName: _photoName,
       title: _title.trim(),
       company: _company.trim(),
       operation: 0,

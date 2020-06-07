@@ -286,7 +286,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
               onPressed: () {
                 item.isFavourite = !item.isFavourite;
 
-                _contactsBloc.updateFavourites(item);
+                _contactsBloc.updateContact(item);
                 _onrefresh();
                 Navigator.pop(context);
               },

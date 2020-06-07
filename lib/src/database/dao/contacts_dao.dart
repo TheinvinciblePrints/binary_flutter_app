@@ -20,14 +20,23 @@ class ContactsDao {
   Future<List<Contacts>> getContacts() async {
     final db = await dbProvider.database;
 
-    List<Map<String, dynamic>> result;
+    List<Map<String, dynamic>> contacts;
 
-    result = await db.rawQuery(
+    contacts = await db.rawQuery(
         "SELECT * FROM $contactsTABLE WHERE operation != 3 ORDER BY first_name");
-    List<Contacts> contacts = result.isNotEmpty
-        ? result.map((item) => Contacts.fromMap(item)).toList()
-        : [];
-    return contacts;
+//    List<Contacts> contacts = result.isNotEmpty
+//        ? result.map((item) => Contacts.fromMap(item)).toList()
+//        : [];
+
+    List<Contacts> contactList = List<Contacts>();
+
+    contacts.forEach((currentContact) {
+      Contacts contact = Contacts.fromMap(currentContact);
+
+      contactList.add(contact);
+    });
+
+    return contactList;
   }
 
   Future<List<Contacts>> getContactsForOnline() async {
@@ -133,7 +142,7 @@ class ContactsDao {
   Future<int> updateFavourite(Contacts contacts) async {
     final db = await dbProvider.database;
     return await db.rawUpdate(
-        'UPDATE $contactsTABLE SET isFavourite = ${contacts.isFavourite} WHERE uuid = ${contacts.UUID}');
+        'UPDATE $contactsTABLE SET isFavourite = ${contacts.isFavourite} WHERE id = ${contacts.id}');
   }
 
   //Delete Contacts records

@@ -5,6 +5,7 @@ import 'package:binaryflutterapp/src/screens/edit_contact_screen.dart';
 import 'package:binaryflutterapp/src/shared/assets.dart';
 import 'package:binaryflutterapp/src/shared/colors.dart';
 import 'package:binaryflutterapp/src/shared/hex_color.dart';
+import 'package:binaryflutterapp/src/utils/image_utility.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,6 +70,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Widget _headerContent(BuildContext _context) {
+    AssetImage assetimage = AssetImage(Assets.iconProfile);
+    Image staticImage = Image(image: assetimage, width: 125.0, height: 125.0);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,18 +82,34 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
             Padding(
               padding: EdgeInsets.only(left: 85, right: 40),
               child: Container(
-                width: 150.0,
-                height: 150.0,
-                child: CircleAvatar(
-                  backgroundColor: HexColor.hexToColor(AppColors.primaryColor),
-                  child: CircleAvatar(
-                    radius: 71,
-                    backgroundColor: Colors.white,
-                    backgroundImage: AssetImage(
-                      Assets.iconProfile,
-                    ),
+                width: 130.0,
+                height: 130.0,
+                decoration: BoxDecoration(
+                  // Circle shape
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  // The border you want
+                  border: Border.all(
+                    width: 3.0,
+                    color: HexColor.hexToColor(AppColors.primaryColor),
                   ),
                 ),
+                child: widget.contacts.photoName == null
+                    ? staticImage
+                    : CircleAvatar(
+                        backgroundColor: Colors.white,
+                        child: ClipRRect(
+                          borderRadius:
+                              new BorderRadius.all(new Radius.circular(40.0)),
+                          child: CircleAvatar(
+                            backgroundColor: Colors.transparent,
+                            radius: 62.0,
+                            backgroundImage: MemoryImage(
+                                ImageUtility.dataFromBase64String(
+                                    widget.contacts.photoName)),
+                          ),
+                        ),
+                      ),
               ),
             ),
           ],

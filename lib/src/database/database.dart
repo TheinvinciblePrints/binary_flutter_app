@@ -51,7 +51,7 @@ class DatabaseProvider {
   void initDB(Database database, int version) async {
     await database.execute(
       "CREATE TABLE $contactsTABLE ("
-      "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "$COLUMN_ID INTEGER PRIMARY KEY,"
       "$COLUMN_UUID TEXT UNIQUE,"
       "$COLUMN_FIRSTNAME TEXT,"
       "$COLUMN_LASTNAME TEXT,"

@@ -32,11 +32,15 @@ class UserBloc extends Bloc<UserEvent, UserState> {
   @override
   Stream<UserState> mapEventToState(UserEvent event) async* {
     final currentState = state;
+    List<Contacts> contactList = new List<Contacts>();
+    List<Contacts> loadedContacts = new List<Contacts>();
     if (event is UsersFetched && !_hasReachedMax(currentState)) {
       try {
         if (currentState is UserInitial) {
           final response =
               await userRepository.fetchUserList(pageNumber, rowNumber);
+
+          await _contactsRepository.deleteAllContacts();
 
           for (int index = 0; index < response.data.length; index++) {
             Data _data = response.data[index];
@@ -55,17 +59,19 @@ class UserBloc extends Bloc<UserEvent, UserState> {
             );
 
             await _contactsRepository.insertContact(contacts);
+
+            contactList.add(contacts);
           }
 
-          List<Data> dataResponse = response.data;
+//          List<Data> dataResponse = response.data;
 
-          dataResponse.sort((a, b) {
-            return a.firstName
+          contactList.sort((a, b) {
+            return a.first_name
                 .toLowerCase()
-                .compareTo(b.firstName.toLowerCase());
+                .compareTo(b.last_name.toLowerCase());
           });
 
-          yield UserSuccess(data: dataResponse, hasReachedMax: false);
+          yield UserSuccess(data: contactList, hasReachedMax: false);
           return;
         }
         if (currentState is UserSuccess) {
@@ -91,21 +97,26 @@ class UserBloc extends Bloc<UserEvent, UserState> {
               );
 
               await _contactsRepository.insertContact(contacts);
+
+              loadedContacts.add(contacts);
+              contactList.add(contacts);
             }
           }
 
-          List<Data> loadedData = currentState.data + response.data;
+          List<Contacts> loadedData = currentState.data + loadedContacts;
 
-          loadedData.sort((a, b) {
-            return a.firstName
+          print('loadedData: ${loadedData.length}');
+
+          contactList.sort((a, b) {
+            return a.first_name
                 .toLowerCase()
-                .compareTo(b.firstName.toLowerCase());
+                .compareTo(b.last_name.toLowerCase());
           });
 
           yield response.data.isEmpty
               ? currentState.copyWith(hasReachedMax: true)
               : UserSuccess(
-                  data: loadedData,
+                  data: contactList,
                   hasReachedMax: false,
                 );
         }

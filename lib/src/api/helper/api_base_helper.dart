@@ -21,6 +21,8 @@ class ApiBaseHelper {
     final response = await http
         .get(_baseUrl + userEndpoint + '?page=$pageNumber' + '&row=$rowNumber');
 
+    print('User response:  $response');
+
     if (response.statusCode == 200) {
       responseJson = json.decode(response.body);
 

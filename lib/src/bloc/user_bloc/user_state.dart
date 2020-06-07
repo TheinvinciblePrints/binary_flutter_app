@@ -1,4 +1,4 @@
-import 'package:binaryflutterapp/src/models/users_model.dart';
+import 'package:binaryflutterapp/src/models/contacts_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class UserState extends Equatable {
@@ -13,7 +13,7 @@ class UserInitial extends UserState {}
 class UserFailure extends UserState {}
 
 class UserSuccess extends UserState {
-  final List<Data> data;
+  final List<Contacts> data;
   final bool hasReachedMax;
 
   const UserSuccess({
@@ -22,7 +22,7 @@ class UserSuccess extends UserState {
   });
 
   UserSuccess copyWith({
-    List<Data> data,
+    List<Contacts> data,
     bool hasReachedMax,
   }) {
     return UserSuccess(

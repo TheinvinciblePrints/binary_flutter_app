@@ -427,14 +427,16 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 widget.contacts.email != _email.trim()) {
               final internetAvailable = await networkCheck.checkInternet();
 
-              if (internetAvailable != null && internetAvailable) {
+              if (internetAvailable != null &&
+                  internetAvailable &&
+                  widget.contacts.operation == 0) {
                 Data contacts = Data(
                     id: widget.contacts.UUID,
                     firstName: _first_name.trim(),
                     lastName: _last_name.trim(),
                     email: _email.trim(),
                     gender: _gender.trim(),
-                    dateOfBirth: _new_dob.trim(),
+                    dateOfBirth: _new_dob,
                     phoneNo: _mobile.trim());
 
                 _editUserBloc.add(
