@@ -19,8 +19,6 @@ import 'package:binaryflutterapp/src/utils/image_utility.dart';
 import 'package:binaryflutterapp/src/utils/string_utils.dart';
 import 'package:binaryflutterapp/src/widgets/bottom_loader.dart';
 import 'package:binaryflutterapp/src/widgets/circular_progress.dart';
-import 'package:binaryflutterapp/src/widgets/error_view.dart';
-import 'package:binaryflutterapp/src/widgets/network_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -38,8 +36,6 @@ class _ContactScreenState extends State<ContactScreen> {
   UserBloc _userBloc;
   TextEditingController _searchController = TextEditingController();
   final userRepository = UserRepository();
-  NetworkCheck networkCheck = NetworkCheck();
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   bool isOnline = false;
   bool isRefreshed;
@@ -57,8 +53,6 @@ class _ContactScreenState extends State<ContactScreen> {
     _userBloc = BlocProvider.of<UserBloc>(context);
     isRefreshed = false;
     isApiLoaded = false;
-//    bloc.fetchUsers();
-//    _userBloc.add(UsersFetched());
     print('methodCalled: initState');
     super.initState();
   }
@@ -83,7 +77,6 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget build(BuildContext context) {
     print('methodCalled: mainBuild');
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(StringUtils.app_title),
         actions: <Widget>[
@@ -338,35 +331,56 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget _buildSlideMenuItem(
-      BuildContext context, int index, Contacts contacts) {
+      BuildContext context, int index, List<Contacts> _contactList) {
     isRefreshed = true;
     _deleteUserBloc = BlocProvider.of<DeleteUserBloc>(context);
 
-    return BlocListener<DeleteUserBloc, DeleteState>(
+    Contacts contacts = _contactList[index];
+
+    return BlocConsumer<DeleteUserBloc, DeleteState>(
+      listenWhen: (oldState, currentState) {
+        if (oldState is DeleteSubmitState) {
+          Navigator.of(context).pop();
+        }
+
+        return currentState is DeleteFailureState ||
+            currentState is DeleteSuccessState ||
+            currentState is DeleteSubmitState;
+      },
       listener: (context, state) {
-        if (state is DeleteSuccessState) {
-          _onrefresh();
-          updateDB(context, state.UUID, contacts.id);
+        if (state is DeleteFailureState) {
+          String message = 'Failed to delete user';
+          toast(
+              message, Toast.LENGTH_SHORT, ToastGravity.BOTTOM, Colors.black12);
+        } else if (state is DeleteSuccessState) {
+          if (state.UUID != null) {
+            _contactsBloc.deleteContactById(contacts.id);
+            _contactList
+                .removeWhere((_contacts) => _contacts.id == contacts.id);
+          }
+        } else if (state is DeleteSubmitState) {
+          //pr.show();
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text('Please, be patient...'),
+              content: Row(
+                children: <Widget>[
+                  CircularProgressIndicator(),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Deleting...'),
+                ],
+              ),
+            ),
+            barrierDismissible: false,
+          );
         }
       },
-      child: BlocBuilder(
-          bloc: _deleteUserBloc,
-          builder: (_context, state) {
-            if (state is DeleteInitialState) {
-              return _slideMenuWidget(context, index, contacts);
-            } else if (state is DeleteSubmitState) {
-              print('deleteIndex: $index');
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else if (state is DeleteFailureState) {
-              return SnackBar(
-                content: Text('Failed to delete user'),
-              );
-            } else {
-              return Container();
-            }
-          }),
+      builder: (context, state) {
+        return _slideMenuWidget(context, index, _contactList);
+      },
     );
   }
 
@@ -402,22 +416,24 @@ class _ContactScreenState extends State<ContactScreen> {
           builder: (context) => UserDetailScreen(
                 contacts: contacts,
                 onEdit: (contacts) {
-                  _onrefresh();
+                  _onRefresh();
                 },
                 onUserEdit: (contacts) {
-                  print('edited ${contacts.first_name}');
-                  _onrefresh();
+                  _onRefresh();
                 },
               )),
     );
   }
 
-  Future<void> _onrefresh() async {
+  Future<void> _onRefresh() async {
     isRefreshed = true;
     await _contactsBloc.getContacts();
   }
 
-  Widget _slideMenuWidget(BuildContext context, int index, Contacts contacts) {
+  Widget _slideMenuWidget(
+      BuildContext context, int index, List<Contacts> _contactList) {
+    Contacts contacts = _contactList[index];
+
     return Slidable(
       actionPane: SlidableDrawerActionPane(),
       actionExtentRatio: 0.28,
@@ -436,7 +452,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         child: EditContactScreen(
                           contacts: contacts,
                           onEdit: (Contacts contacts) {
-                            _onrefresh();
+                            _onRefresh();
                           },
                         ),
                       )),
@@ -450,63 +466,27 @@ class _ContactScreenState extends State<ContactScreen> {
             if (connectionStatus != null &&
                 connectionStatus != ConnectivityStatus.Offline) {
               if (contacts.operation == 0) {
-                _showDialog(contacts, index);
+                _showDialog(_contactList, contacts, index);
               }
             } else {
               //Offline
               // operation = 1 means user added contact in offline mode
               if (contacts.operation == 1) {
-                _showDialog(contacts, index);
+                _showDialog(_contactList, contacts, index);
               } else {
-                _showSnackBar(_scaffoldKey,
-                    'You cannot delete this contact in offline mode');
+                String message =
+                    'You cannot delete this contact in offline mode';
+                toast(message, Toast.LENGTH_LONG, ToastGravity.BOTTOM,
+                    Colors.black);
               }
             }
           },
         ),
       ],
     );
-//    return SlideMenu(
-//      items: <ActionItems>[
-//        ActionItems(
-//            icon: IconButton(
-//              icon: Icon(Icons.edit),
-//              onPressed: () {},
-//              color: Colors.white,
-//            ),
-//            onPress: () {
-//              Navigator.push(
-//                context,
-//                MaterialPageRoute(
-//                    builder: (context) => BlocProvider<EditUserBloc>(
-//                          create: (BuildContext context) =>
-//                              EditUserBloc(userRepository: userRepository),
-//                          child: EditContactScreen(
-//                            contacts: contacts,
-//                            onEdit: (Contacts contacts) {
-//                              _onrefresh();
-//                            },
-//                          ),
-//                        )),
-//              );
-//            },
-//            backgroudColor: Colors.grey),
-//        ActionItems(
-//            icon: new IconButton(
-//              icon: new Icon(Icons.delete),
-//              onPressed: () {},
-//              color: Colors.white,
-//            ),
-//            onPress: () {
-//              _showDialog(contacts, index);
-//            },
-//            backgroudColor: Colors.red),
-//      ],
-//      child: _buildRow(contacts, index),
-//    );
   }
 
-  _showDialog(Contacts item, int _index) {
+  _showDialog(List<Contacts> _contactList, Contacts item, int _index) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -536,7 +516,8 @@ class _ContactScreenState extends State<ContactScreen> {
                     // Update operation to 3 (Need to delete)
                     item.operation = 3;
                     _contactsBloc.updateContact(item);
-                    _onrefresh();
+                    _contactList
+                        .removeWhere((_contacts) => _contacts.id == item.id);
                   }
                 }
               },
@@ -545,13 +526,6 @@ class _ContactScreenState extends State<ContactScreen> {
         );
       },
     );
-  }
-
-  updateDB(BuildContext context, String UUID, int contactId) {
-    if (UUID != null) {
-      _contactsBloc.deleteContactById(contactId);
-      _onrefresh();
-    }
   }
 
   _goToAddContactPage() {
@@ -563,48 +537,12 @@ class _ContactScreenState extends State<ContactScreen> {
                     CreateUserBloc(userRepository: userRepository),
                 child: AddContactScreen(
                   onSave: (Contacts contacts) {
-                    _onrefresh();
+                    _onRefresh();
                   },
                 ),
               )),
     );
   }
-
-  _showSnackBar(GlobalKey<ScaffoldState> scaffoldKey, String message) {
-    scaffoldKey.currentState.showSnackBar(SnackBar(
-      content: Text('$message'),
-    ));
-  }
-
-//  void saveToDB(BuildContext context, List<Data> data) {
-//    List<Contacts> contactList;
-//    for (int index = 0; index < data.length; index++) {
-//      Data _data = data[index];
-//      contactList = new List<Contacts>();
-//
-//      Contacts contacts = Contacts(
-//        UUID: _data.id,
-//        first_name: _data.firstName,
-//        last_name: _data.lastName,
-//        gender: _data.gender,
-//        dob: _data.dateOfBirth,
-//        mobile: _data.phoneNo,
-//        email: _data.email,
-//        title: '',
-//        company: '',
-//        operation: 0,
-//        isFavourite: false,
-//      );
-//
-//      contactList.add(contacts);
-//      _contactsBloc.addContacts(contacts);
-//
-////      _buildSlideMenuItem(context, index, contacts);
-//    }
-//
-//    contactListWidget(contactList);
-////    _onrefresh();
-//  }
 
   Function toast(
       String msg, Toast toast, ToastGravity toastGravity, Color colors) {
@@ -623,26 +561,18 @@ class _ContactScreenState extends State<ContactScreen> {
     return ListView.builder(
       itemCount: _contactList.length,
       itemBuilder: (context, itemPosition) {
-        Contacts contacts = _contactList[itemPosition];
-        return _buildSlideMenuItem(context, itemPosition, contacts);
+        return _buildSlideMenuItem(context, itemPosition, _contactList);
       },
     );
   }
 
   Widget apiContactListWidget(List<Contacts> _contactList, List<Data> data) {
-//    return ListView.builder(
-//      itemCount: _contactList.length,
-//      itemBuilder: (context, itemPosition) {
-//        Contacts contacts = _contactList[itemPosition];
-//        return _buildSlideMenuItem(context, itemPosition, contacts);
-//      },
-//    );
     isApiLoaded = true;
     return ListView.builder(
       itemBuilder: (BuildContext context, int index) {
         return index >= _contactList.length
             ? BottomLoader()
-            : _buildSlideMenuItem(context, index, _contactList[index]);
+            : _buildSlideMenuItem(context, index, _contactList);
       },
       itemCount: hasReachedMax ? _contactList.length : _contactList.length + 1,
       controller: _apiListScrollController,
@@ -653,14 +583,10 @@ class _ContactScreenState extends State<ContactScreen> {
     final maxScroll = _apiListScrollController.position.maxScrollExtent;
     final currentScroll = _apiListScrollController.position.pixels;
     if (maxScroll - currentScroll <= _scrollThreshold) {
-      if (isOnline) {
+      if (connectionStatus != ConnectivityStatus.Offline) {
         _userBloc.add(UsersFetched());
       }
     }
-  }
-
-  void refreshApiList() {
-    _userBloc.add(UsersFetched());
   }
 
   Widget apiCallWidget() {
@@ -681,9 +607,33 @@ class _ContactScreenState extends State<ContactScreen> {
           } else if (state is UserInitial) {
             return loadingUsersData();
           } else if (state is UserFailure) {
-            return ErrorView(
-              message: 'Failed to load data',
-              action: refreshApiList,
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'Failed to load data',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 25),
+                  child: FloatingActionButton(
+                    backgroundColor: HexColor.hexToColor(AppColors.accentColor),
+                    child: Icon(
+                      Icons.refresh,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      _userBloc.add(UsersFetched());
+                      apiCallWidget();
+                    },
+                  ),
+                ),
+              ],
             );
           } else {
             return loadingData();

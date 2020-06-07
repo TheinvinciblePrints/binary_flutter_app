@@ -63,7 +63,7 @@ class ContactsBloc {
 
   deleteContactById(int id) async {
     _contactsRepository.deleteContactById(id);
-    getContacts();
+//    getContacts();
   }
 
   dispose() {

@@ -40,7 +40,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
           final response =
               await userRepository.fetchUserList(pageNumber, rowNumber);
 
-          await _contactsRepository.deleteAllContacts();
+//          await _contactsRepository.deleteAllContacts();
 
           for (int index = 0; index < response.data.length; index++) {
             Data _data = response.data[index];
