@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   UserBloc(userRepository: userRepository),
             ),
           ],
-          child: ContactScreen(),
+          child: AllScreen(),
         );
         break;
       case 1:

@@ -25,12 +25,12 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
-class ContactScreen extends StatefulWidget {
+class AllScreen extends StatefulWidget {
   @override
-  _ContactScreenState createState() => _ContactScreenState();
+  _AllScreenState createState() => _AllScreenState();
 }
 
-class _ContactScreenState extends State<ContactScreen> {
+class _AllScreenState extends State<AllScreen> {
   ContactsBloc _contactsBloc;
   DeleteUserBloc _deleteUserBloc;
   UserBloc _userBloc;
@@ -38,6 +38,7 @@ class _ContactScreenState extends State<ContactScreen> {
   final userRepository = UserRepository();
 
   bool isOnline = false;
+  bool isSearching = false;
   bool isRefreshed;
   bool hasReachedMax = false;
   bool isApiLoaded;
@@ -62,6 +63,7 @@ class _ContactScreenState extends State<ContactScreen> {
     print('methodCalled: dispose');
     _contactsBloc.dispose();
     _apiListScrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -98,6 +100,7 @@ class _ContactScreenState extends State<ContactScreen> {
           )
         ],
       ),
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
       body: Container(
         color: Colors.white,
@@ -107,10 +110,16 @@ class _ContactScreenState extends State<ContactScreen> {
             Padding(
               padding: new EdgeInsets.only(
                   left: 20.0, right: 20, top: 15, bottom: 10),
-              child: new TextField(
+              child: TextField(
                 controller: _searchController,
                 onChanged: (value) {
                   _contactsBloc.searchContacts(value);
+
+                  if (_searchController.text.isEmpty) {
+                    isSearching = false;
+                  } else {
+                    isSearching = true;
+                  }
                 },
                 autofocus: false,
                 decoration: InputDecoration(
@@ -232,19 +241,6 @@ class _ContactScreenState extends State<ContactScreen> {
               "No Contacts found",
               style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500),
             ),
-            FlatButton(
-              onPressed: () {
-                _goToAddContactPage();
-              },
-              child: Text(
-                'Add Contact'.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: HexColor.hexToColor(AppColors.primaryColor),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -294,6 +290,10 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           children: <Widget>[
             ListTile(
+//              leading: new CircleAvatar(
+//                backgroundColor: Colors.blue,
+//                child: Text('${contacts.first_name.substring(0, 1)}'),
+//              ),
               leading: _pictureContent(contacts),
               title: Text(
                 '${contacts.first_name} ${contacts.last_name}',
@@ -571,7 +571,9 @@ class _ContactScreenState extends State<ContactScreen> {
     return ListView.builder(
       itemBuilder: (BuildContext context, int index) {
         return index >= _contactList.length
-            ? BottomLoader()
+            ? BottomLoader(
+                isSearching: isSearching,
+              )
             : _buildSlideMenuItem(context, index, _contactList);
       },
       itemCount: hasReachedMax ? _contactList.length : _contactList.length + 1,
@@ -582,24 +584,29 @@ class _ContactScreenState extends State<ContactScreen> {
   void _onScroll() {
     final maxScroll = _apiListScrollController.position.maxScrollExtent;
     final currentScroll = _apiListScrollController.position.pixels;
-    if (maxScroll - currentScroll <= _scrollThreshold) {
-      if (connectionStatus != ConnectivityStatus.Offline) {
+    if (maxScroll - currentScroll <= _scrollThreshold &&
+        !_apiListScrollController.position.outOfRange) {
+      if (connectionStatus != ConnectivityStatus.Offline && !isSearching) {
         _userBloc.add(UsersFetched());
       }
     }
   }
 
   Widget apiCallWidget() {
-    if (!isApiLoaded) {
-      _userBloc.add(UsersFetched());
-    }
+//    if (!isApiLoaded) {
+//      _userBloc.add(UsersFetched());
+//    }
+    _userBloc.add(UsersFetched());
     return BlocBuilder(
         bloc: _userBloc,
         builder: (_context, state) {
           if (state is UserSuccess) {
             if (state.data.isEmpty) {
               return Center(
-                child: Text('No users'),
+                child: Text(
+                  'No users found',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               );
             }
             hasReachedMax = state.hasReachedMax;

@@ -11,7 +11,7 @@ class ContactsDao {
   Future<int> createContacts(Contacts contacts) async {
     final db = await dbProvider.database;
     var result = db.insert(contactsTABLE, contacts.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+        conflictAlgorithm: ConflictAlgorithm.ignore);
 
     return result;
   }
@@ -58,7 +58,7 @@ class ContactsDao {
               * 
            FROM 
               $contactsTABLE 
-           WHERE 
+           WHERE operation != 3 AND
               first_name LIKE '%$value%' or 
               last_name LIKE '%$value%' or 
               title LIKE '%$value%'

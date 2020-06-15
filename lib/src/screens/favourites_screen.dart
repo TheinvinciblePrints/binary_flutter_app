@@ -45,6 +45,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
   );
 
   @override
+  @mustCallSuper
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -198,7 +199,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             style: _titleFont,
           ),
           subtitle: Text(
-            contacts.title,
+            '${contacts.mobile}',
             style: _subtitleFont,
           ),
           trailing: Icon(
